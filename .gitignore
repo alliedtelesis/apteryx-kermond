@@ -1,0 +1,8 @@
+*.o
+apteryx-kermond
+dot1q/dot1q.h
+icmp/icmp.h
+interface/interface.h
+iprouting/iprouting.h
+neighbor/neighbor.h
+tcp/tcp.h

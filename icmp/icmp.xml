@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MODULE xmlns="https://github.com/alliedtelesis/apteryx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://github.com/alliedtelesis/apteryx
+	https://github.com/alliedtelesis/apteryx/releases/download/v2.10/apteryx.xsd">
+	<NODE name="ip" >
+		<NODE name="v4" help="IPv4" >
+			<NODE name="icmp" >
+				<NODE name="send-destination-unreachable" mode="rw" default="1" help="Whether to send ipv4 icmp destination unreachable messages" pattern="^(0|1)$" >
+					<VALUE name="enable" value="1" />
+					<VALUE name="disable" value="0" />
+				</NODE>
+				<NODE name="error-ratelimit" mode="rw" default="1000" help="How often to allow ipv4 icmp error messages in milliseconds." pattern="^{{range(0,2147483647)}}$" >
+				</NODE>
+			</NODE>
+		</NODE>
+		<NODE name="v6" help="IPv6" >
+			<NODE name="icmp" >
+				<NODE name="send-destination-unreachable" mode="rw" default="1" help="Whether to send ipv6 icmp destination unreachable messages" pattern="^(0|1)$" >
+					<VALUE name="enable" value="1" />
+					<VALUE name="disable" value="0" />
+				</NODE>
+				<NODE name="error-ratelimit" mode="rw" default="1000" help="How often to allow ipv6 icmp error messages in milliseconds." pattern="^{{range(0,2147483647)}}$" >
+				</NODE>
+			</NODE>
+		</NODE>
+	</NODE>
+</MODULE>

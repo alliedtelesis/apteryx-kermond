@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MODULE xmlns="https://github.com/alliedtelesis/apteryx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://github.com/alliedtelesis/apteryx
+	https://github.com/alliedtelesis/apteryx/releases/download/v2.10/apteryx.xsd">
+	<NODE name="interface">
+		<NODE name="if-alias" help="Interface index to name">
+			<NODE name="*" mode="r" help="Interface index, value = ifname" />
+		</NODE>
+		<NODE name="interfaces" help="Interface List">
+			<NODE name="*" help="Interface Name">
+				<NODE name="name" mode="r" help="Interface name" />
+				<NODE name="if-index" mode="r" help="Interface Index" />
+				<NODE name="status" help="Interface status">
+					<NODE name="admin-status" mode="r" help="Admin Status">
+						<VALUE name="admin-down" value="0" />
+						<VALUE name="admin-up" value="1" />
+					</NODE>
+					<NODE name="oper-status" mode="r" help="Operation State, refer: kernel documentation" />
+					<NODE name="flags" mode="r" help="Interface state flags, refer: kernel documentation" />
+					<NODE name="phys-address" mode="r" help="Physical (MAC) Address"/>
+					<NODE name="promisc" mode="h" help="Promiscuous mode">
+						<VALUE name="promisc-off" value="0" />
+						<VALUE name="promisc-on" value="1" />
+					</NODE>
+					<NODE name="qdisc" mode="h" help="Traffic Queuing Discipline" />
+					<NODE name="mtu" mode="r" help="Maximum Transmission Unit (68-16535 octets)"/>
+					<NODE name="speed" mode="r" help="Current interface speed (Mb/s)"/>
+					<NODE name="max-speed" mode="r" help="Maximum possible interface speed (Mb/s)"/>
+					<NODE name="master-ifindex" mode="r" help=" Parent bridge ifindex"/>
+					<NODE name="duplex" mode="r" help="Current Duplex Mode">
+						<VALUE name="Auto" value="0" help="Auto Duplex" />
+						<VALUE name="Full" value="1" help="Full Duplex" />
+						<VALUE name="Half" value="2" help="Half Duplex" />
+					</NODE>
+					<NODE name="polarity" mode="r" help="Current MDI/-X Mode">
+						<VALUE name="Auto" value="0" help="Auto" />
+						<VALUE name="MDI" value="1" help="MDI" />
+						<VALUE name="MDI-X" value="2" help="MDI-X" />
+					</NODE>
+					<NODE name="mru" mode="r" help="Maximum Receive Units (68-16535 octets)"/>
+					<NODE name="arptype" mode="r" help="ARP Hardware Type. 1 = ethernet"/>
+					<NODE name="rxq" mode="h" help="How many receive queues exist" />
+					<NODE name="txqlen" mode="h" help="Maximum transmit queue length" />
+					<NODE name="txq" mode="h" help="How many transmit queues exist" />
+					<NODE name="ipv4" help="IPv4">
+						<NODE name="addresses" help="IPv4 addresses">
+							<NODE name="*" help="name-pattern: ip_subnet">
+								<NODE name="ip" mode="r" help="IPv4 Address"/>
+								<NODE name="mask" mode="r" help="Subnet Mask  (0-32)"/>
+								<NODE name="scope" mode="r" help="Address scope">
+									<VALUE name="Universe" value="0" help="Global address" />
+									<VALUE name="Site" value="200" help="Site-only access" />
+									<VALUE name="Link" value="253" help="On-Link-only access" />
+									<VALUE name="Host" value="254" help="Host-only access" />
+									<VALUE name="Nowhere" value="255" help="Non-existant destination" />
+								</NODE>
+								<NODE name="flags" mode="r" default="0" help="Address flags (kernel: IFA_ADDRESS)" />
+								<NODE name="secondary" default="0" mode="r" help="Secondary IP address">
+									<VALUE name="secondary" value="1" help="This is a secondary IP Address" />
+									<VALUE name="not" value="0" help="This is NOT a secondary IP Address" />
+								</NODE>
+								<NODE name="remote" mode="r" help="If this is a point-to-point interface then this is the remote IPv4 Address, otherwise it is the broadcast IPv4 address"/>
+								<NODE name="type" default="standard" mode="r" help="IPv4 address type">
+									<VALUE name="standard" value="standard" help="This is a standard (broadcast) type IPv4 Address" />
+									<VALUE name="point-to-point" value="point-to-point" help="This is a point-to-point type IPv4 Address" />
+								</NODE>
+							</NODE>
+						</NODE>
+					</NODE>
+					<NODE name="ipv6" help="IPv6">
+						<NODE name="addresses" help="IPv6 addresses">
+							<NODE name="*" help="name-pattern: ip_subnet">
+								<NODE name="ip" mode="r" help="IPv6 Address"/>
+								<NODE name="mask" mode="r" help="Subnet Mask (0-128)"/>
+								<NODE name="scope" mode="r" help="Address scope">
+									<VALUE name="Universe" value="0" help="Global address" />
+									<VALUE name="Site" value="200" help="Site-only access" />
+									<VALUE name="Link" value="253" help="On-Link-only access" />
+									<VALUE name="Host" value="254" help="Host-only access" />
+									<VALUE name="Nowhere" value="255" help="Non-existant destination" />
+								</NODE>
+								<NODE name="flags" mode="r" default="0" help="Address flags (kernel: IFA_ADDRESS)" />
+								<NODE name="remote" mode="r" help="If this is a point-to-point interface then this is the remote IPv6 Address, otherwise blank"/>
+								<NODE name="type" default="standard" mode="r" help="IPv6 address type">
+									<VALUE name="standard" value="standard" help="This is a standard type IPv6 Address" />
+									<VALUE name="point-to-point" value="point-to-point" help="This is a point-to-point type IPv6 Address" />
+								</NODE>
+								<NODE name="preferred-lifetime" mode="r" help="Preferred lifetime of the address" />
+								<NODE name="valid-lifetime" mode="r" help="Valid lifetime of the address" />
+							</NODE>
+						</NODE>
+					</NODE>
+				</NODE>
+				<NODE name="settings" help="Interface Settings">
+					<NODE name="admin-status" mode="rw" default="1" help="Configured admin status of the port. Refer to status/admin-status for applied value" pattern="^(0|1)$" >
+						<VALUE name="admin-down" value="0" />
+						<VALUE name="admin-up" value="1" />
+					</NODE>
+					<NODE name="vrf" mode="r" help="VRF-ID for the interface"/>
+					<NODE name="phys-address" mode="rw" help="Physical (MAC) Address" pattern="^{{mac-address}}$" />
+					<NODE name="mtu" mode="rw" help="Maximum Transmission Unit (octets)" pattern="^{{range(68,16535)}}$" />
+					<NODE name="speed" mode="rw" default="0" help="Configured interface speed (Mb/s or zero to auto-negotiate)" pattern="^(0|10|100|1000|10000|40000)$" />
+					<NODE name="duplex" mode="rw" default="0" help="Configured Duplex" pattern="^[0-2]$">
+						<VALUE name="Auto" value="0" help="Auto Duplex" />
+						<VALUE name="Full" value="1" help="Full Duplex" />
+						<VALUE name="Half" value="2" help="Half Duplex" />
+					</NODE>
+					<NODE name="polarity" mode="rw" default="0" help="Configured MDI/-X Mode" pattern="^[0-2]$">
+						<VALUE name="Auto" value="0" help="Auto" />
+						<VALUE name="MDI" value="1" help="MDI" />
+						<VALUE name="MDI-X" value="2" help="MDI-X" />
+					</NODE>
+					<NODE name="mru" mode="rw" help="Maximum Receive Units (octets)" pattern="^{{range(68,16535)}}$" />
+					<NODE name="ipv4" help="IPv4">
+						<NODE name="addresses" help="IPv4 addresses">
+							<NODE name="*" help="name-pattern: ip_subnet">
+								<NODE name="ip" mode="rw" help="IPv4 Address" pattern="^{{ipv4-address}}$" />
+								<NODE name="mask" mode="rw" help="Subnet Mask" pattern="^{{range(0,32)}}$" />
+								<NODE name="secondary" default="0" mode="rw" help="Secondary IP address" pattern="^(0|1)$">
+									<VALUE name="secondary" value="1" help="This is a secondary IP Address" />
+									<VALUE name="not" value="0" help="This is NOT a secondary IP Address" />
+								</NODE>
+								<NODE name="remote" mode="rw" help="If this is a point-to-point interface then this is the remote IPv4 Address" pattern="^{{ipv4-address}}$" />
+								<NODE name="type" default="standard" mode="rw" help="IPv4 address type">
+									<VALUE name="standard" value="standard" help="This is a standard (broadcast) type IPv4 Address" />
+									<VALUE name="point-to-point" value="point-to-point" help="This is a point-to-point type IPv4 Address" />
+								</NODE>
+							</NODE>
+						</NODE>
+					</NODE>
+					<NODE name="ipv6" help="IPv6">
+						<NODE name="addresses" help="IPv6 addresses">
+							<NODE name="*" help="name-pattern: ip_subnet">
+								<NODE name="ip" mode="rw" help="IPv6 Address" pattern="^{{ipv6-address}}$" />
+								<NODE name="mask" mode="rw" help="Subnet Mask" pattern="^{{range(0,128)}}$" />
+								<NODE name="remote" mode="rw" help="If this is a point-to-point interface then this is the remote IPv6 Address" pattern="^{{ipv6-address}}$" />
+								<NODE name="type" default="standard" mode="rw" help="IPv6 address type">
+									<VALUE name="standard" value="standard" help="This is a standard type IPv6 Address" />
+									<VALUE name="point-to-point" value="point-to-point" help="This is a point-to-point type IPv6 Address" />
+								</NODE>
+							</NODE>
+						</NODE>
+					</NODE>
+				</NODE>
+				<NODE name="l2" mode="r" default="0" help="1=This is a layer 2 interface">
+					<VALUE name="l2-if" value="1" help="This is a Layer 2 interface" />
+				</NODE>
+				<NODE name="l3" mode="r" default="0" help="1=This is a layer 3 interface">
+					<VALUE name="l3-if" value="1" help="This is a Layer 3 interface" />
+				</NODE>
+			</NODE>
+		</NODE>
+	</NODE>
+</MODULE>

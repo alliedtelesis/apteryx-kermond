@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MODULE xmlns="https://github.com/alliedtelesis/apteryx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://github.com/alliedtelesis/apteryx
+	https://github.com/alliedtelesis/apteryx/releases/download/v2.10/apteryx.xsd">
+	<NODE name="ip" >
+		<NODE name="tcp" help="TCP" >
+			<NODE name="synack-retries" mode="rw" default="5" help="Maximum number of retries sending SYN ACKs for half open TCP connections, affects half open connection timeout." pattern="^{{range(0,255)}}$" >
+			</NODE>
+		</NODE>
+	</NODE>
+</MODULE>

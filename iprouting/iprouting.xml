@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MODULE xmlns="https://github.com/alliedtelesis/apteryx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://github.com/alliedtelesis/apteryx
+	https://github.com/alliedtelesis/apteryx/releases/download/v2.10/apteryx.xsd">
+	<NODE name="routing">
+		<NODE name="ipv4">
+			<NODE name="next-index" mode="rw" help="Next (rib) index to use (use CAS to update)" />
+			<NODE name="rib" help="Configured routes">
+				<NODE name="*" help="The current value of 'next-index', need to use CAS">
+					<NODE name="id" mode="rw" help="The index of this entry, get from 'next-index'" pattern="^[1-9][0-9]*$" />
+					<NODE name="vrf-id" default="0" mode="rw" help="Which vrf is this route for ?" pattern="^{{range(0,64)}}$" />
+					<NODE name="prefix" mode="rw" help="What address range does this route apply to ?" pattern="^{{ipv4-address}}/{{range(0,32)}}$"/>
+					<NODE name="nexthop" mode="rw" help="Who to route this traffic to ?" pattern="^{{ipv4-address}}$" />
+					<NODE name="ifname" mode="rw" help="Which interface to send this traffic over ?" pattern="^.*$" />
+					<NODE name="distance" mode="rw" help="Adminstrative distance of this route" pattern="^{{range(1,65536)}}$" />
+					<NODE name="metric" mode="rw" help="Relative metric (preference) of this route, compared to others with the same 'distance'" pattern="^{{range(1,65536)}}$"/>
+					<NODE name="snmp-route-type" mode="rw" help="What type does snmp think this route is ?" pattern="^{{range(1,4)}}$">
+						<VALUE name="other" value="1" />
+						<VALUE name="reject" value="2" />
+						<VALUE name="local" value="3" />
+						<VALUE name="remote" value="4" />
+					</NODE>
+					<NODE name="dhcp-interface" mode="r" help="Which interface was this dhcp learnt on ?" />
+					<NODE name="protocol" mode="rw" help="Which protocol is this route ?" pattern="^(static)$" />
+				</NODE>
+			</NODE>
+			<NODE name="fib">
+				<NODE name="*" mode="rw" help="Installed routes, which are in the format: destination_nexthop_ifindex_protocol_metric. "/>
+			</NODE>
+		</NODE>
+		<NODE name="ipv6">
+			<NODE name="next-index" mode="rw" help="Next (rib) index to use (use CAS to update)" />
+			<NODE name="rib" help="Configured routes">
+				<NODE name="*" help="The current value of 'next-index', need to use CAS">
+					<NODE name="id" mode="rw" help="The index of this entry, get from 'next-index'" pattern="^[1-9][0-9]*$" />
+					<NODE name="vrf-id" default="0" mode="rw" help="Which vrf is this route for ?" pattern="^{{range(0,64)}}$" />
+					<NODE name="prefix" mode="rw" help="What address range does this route apply to ?" pattern="^{{ipv6-address}}/{{range(0,128)}}$"/>
+					<NODE name="nexthop" mode="rw" help="Who to route this traffic to ?" pattern="^{{ipv6-address}}$" />
+					<NODE name="ifname" mode="rw" help="Which interface to send this traffic over ?" pattern="^.*$" />
+					<NODE name="distance" mode="rw" help="Adminstrative distance of this route" pattern="^{{range(1,65536)}}$" />
+					<NODE name="metric" mode="rw" help="Relative metric (preference) of this route, compared to others with the same 'distance'" pattern="^{{range(1,65536)}}$"/>
+					<NODE name="snmp-route-type" mode="rw" help="What type does snmp think this route is ?" pattern="^{{range(1,4)}}$">
+						<VALUE name="other" value="1" />
+						<VALUE name="reject" value="2" />
+						<VALUE name="local" value="3" />
+						<VALUE name="remote" value="4" />
+					</NODE>
+					<NODE name="dhcp-interface" mode="r" help="Which interface was this dhcp learnt on ?" />
+					<NODE name="protocol" mode="rw" help="Which protocol is this route ?" pattern="^(static)$" />
+				</NODE>
+			</NODE>
+			<NODE name="fib">
+				<NODE name="*" help="Installed routes, which are in the format: destination_nexthop_ifindex_protocol_metric. ">
+				</NODE>
+			</NODE>
+		</NODE>
+	</NODE>
+</MODULE>
