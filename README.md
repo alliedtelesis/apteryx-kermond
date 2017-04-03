@@ -1,5 +1,5 @@
 
-##KERMOND - Kernel Monitor Daemon
+# KERMOND - Kernel Monitor Daemon
 An Apteryx abstraction for the Linux kernel networking stack
 
 ## Requires
