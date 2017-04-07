@@ -21,27 +21,114 @@
 #include "neighbor.h"
 
 static bool
+system_call (char *cmd)
+{
+    DEBUG ("NEIGHBOR: %s\n", cmd);
+    if (system (cmd) != 0)
+    {
+        ERROR ("NEIGHBOR: Command failed (%s)\n", cmd);
+        return false;
+    }
+    free (cmd);
+    return true;
+}
+
+static bool
+global_opportunistic_nd (const char *value)
+{
+    int mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
+    if ((value && sscanf (value, "%d", &mode) != 1) ||
+        (mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
+         mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
+    {
+        mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
+               value, mode);
+    }
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.aggressive_nd=%d", mode);
+    return system_call (cmd);
+}
+
+static bool
+interface_aging_timeout (const char *ifname, const char *value)
+{
+    int timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
+    if ((value && sscanf (value, "%d", &timeout) != 1) ||
+        timeout < 0 || timeout > 432000)
+    {
+        timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid aging-timeout value (%s) using default (%d)\n",
+               value, timeout);
+    }
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.base_reachable_time_ms=%d",
+                           ifname, timeout * 1000);
+    return system_call (cmd);
+}
+
+static bool
+interface_mac_disparity (const char *ifname, const char *value)
+{
+    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
+    if ((value && sscanf (value, "%d", &mode) != 1) ||
+        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_ENABLED &&
+         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DISABLED))
+    {
+        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid mac-disparity value (%s) using default (%d)\n",
+               value, mode);
+    }
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.arp_mac_disparity=%d",
+            ifname, mode);
+    return system_call (cmd);
+}
+
+static bool
+interface_proxy_arp (const char *ifname, const char *value)
+{
+    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
+    if ((value && sscanf (value, "%u", &mode) != 1) ||
+        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DISABLED &&
+         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_ENABLED &&
+         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_LOCAL &&
+         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_BOTH))
+    {
+        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid proxy-arp value (%s) using default (%d)\n", value,
+               mode);
+    }
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.proxy_arp=%d", ifname, mode);
+    return system_call (cmd);
+}
+
+static bool
+interface_opportunistic_nd (const char *ifname, const char *value)
+{
+    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
+    if ((value && sscanf (value, "%u", &mode) != 1) ||
+        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DISABLED &&
+         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_ENABLED))
+    {
+        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
+               value, mode);
+    }
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.optimistic_nd=%d",
+            ifname, mode);
+    return system_call (cmd);
+}
+
+static bool
 watch_ipv4_settings (const char *path, const char *value)
 {
     char ifname[64];
     char parameter[64];
-    char *cmd = NULL;
 
     DEBUG ("NEIGHBOR: %s = %s\n", path, value);
 
     /* Opportunistic Neighbor Discovery */
     if (path && strcmp (path, NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH) == 0)
     {
-        int mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-        if ((value && sscanf (value, "%d", &mode) != 1) ||
-            (mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
-             mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
-        {
-            mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-            ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-                   value, mode);
-        }
-        cmd = g_strdup_printf ("sysctl -w net.ipv4.aggressive_nd=%d", mode);
+        return global_opportunistic_nd (value);
     }
     /* Interface specific */
     else if (path && sscanf (path, NEIGHBOR_IPV4_SETTINGS_INTERFACES_PATH "/%64[^/]/%64s",
@@ -50,85 +137,42 @@ watch_ipv4_settings (const char *path, const char *value)
         /* Aging Timeout */
         if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT) == 0)
         {
-            int timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
-            if ((value && sscanf (value, "%d", &timeout) != 1) ||
-                timeout < 0 || timeout > 432000)
-            {
-                timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
-                ERROR ("NEIGHBOR: Invalid aging-timeout value (%s) using default (%d)\n",
-                       value, timeout);
-            }
-            cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.base_reachable_time_ms=%d",
-                                   ifname, timeout * 1000);
+            return interface_aging_timeout (ifname, value);
         }
         /* MAC Disparity */
         else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY) == 0)
         {
-            int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
-            if ((value && sscanf (value, "%d", &mode) != 1) ||
-                (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_ENABLED &&
-                 mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DISABLED))
-            {
-                mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
-                ERROR ("NEIGHBOR: Invalid mac-disparity value (%s) using default (%d)\n",
-                       value, mode);
-            }
-            cmd =
-                g_strdup_printf ("sysctl -w net.ipv4.conf.%s.arp_mac_disparity=%d", ifname,
-                                 mode);
+            return interface_mac_disparity (ifname, value);
         }
         /* Proxy Arp */
         else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP) == 0)
         {
-            int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
-            if ((value && sscanf (value, "%u", &mode) != 1) ||
-                (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DISABLED &&
-                 mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_ENABLED &&
-                 mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_LOCAL &&
-                 mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_BOTH))
-            {
-                mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
-                ERROR ("NEIGHBOR: Invalid proxy-arp value (%s) using default (%d)\n", value,
-                       mode);
-            }
-            cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.proxy_arp=%d", ifname, mode);
+            return interface_proxy_arp (ifname, value);
         }
         /* Opportunistic Neighbor Discovery */
         else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND) == 0)
         {
-            int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
-            if ((value && sscanf (value, "%u", &mode) != 1) ||
-                (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DISABLED &&
-                 mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_ENABLED))
-            {
-                mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
-                ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-                       value, mode);
-            }
-            cmd =
-                g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.optimistic_nd=%d", ifname,
-                                 mode);
+            return interface_opportunistic_nd (ifname, value);
         }
     }
-    else
+    ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
+    return false;
+}
+
+static bool
+globalv6_opportunistic_nd (const char *value)
+{
+    int mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
+    if ((value && sscanf (value, "%d", &mode) != 1) ||
+        (mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
+         mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
     {
-        ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
-        return false;
+        mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
+        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
+               value, mode);
     }
-
-    /* Valid configuration change */
-    if (cmd)
-    {
-        DEBUG ("NEIGHBOR: %s\n", cmd);
-
-        if (system (cmd) != 0)
-        {
-            ERROR ("NEIGHBOR: Command failed (%s)\n", cmd);
-        }
-        free (cmd);
-    }
-
-    return true;
+    char *cmd = g_strdup_printf ("sysctl -w net.ipv6.icmp.aggressive_nd=%d", mode);
+    return system_call (cmd);
 }
 
 /**
@@ -140,40 +184,13 @@ watch_ipv4_settings (const char *path, const char *value)
 static bool
 watch_ipv6_settings (const char *path, const char *value)
 {
-    char *cmd = NULL;
-
     /* Opportunistic Neighbor Discovery */
     if (path && strcmp (path, NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH) == 0)
     {
-        int mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-        if ((value && sscanf (value, "%d", &mode) != 1) ||
-            (mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
-             mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
-        {
-            mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-            ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-                   value, mode);
-        }
-        cmd = g_strdup_printf ("sysctl -w net.ipv6.icmp.aggressive_nd=%d", mode);
+        return globalv6_opportunistic_nd (value);
     }
-    else
-    {
-        ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
-        return false;
-    }
-
-    /* Valid configuration change */
-    if (cmd)
-    {
-        DEBUG ("NEIGHBOR: %s\n", cmd);
-
-        if (system (cmd) != 0)
-        {
-            ERROR ("NEIGHBOR: Command failed (%s)\n", cmd);
-        }
-        free (cmd);
-    }
-    return true;
+    ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
+    return false;
 }
 
 /**
