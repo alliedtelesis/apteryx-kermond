@@ -76,10 +76,10 @@ EXTRA_LDFLAGS += -Wl,--no-as-needed
 
 DAEMON = apteryx-kermond
 
-SOURCE := main.c module.c apteryx.c netlink.c
+SOURCE := main.c module.c apteryx.c netlink.c procfs.c
 SOURCE += interface/ifstatus.c interface/ifconfig.c
 API_XML += interface/interface.xml
-TEST_SOURCE += interface/test_ifconfig.c
+TEST_SOURCE += interface/test_ifconfig.c interface/test_ifstatus.c
 SOURCE += iprouting/rib.c iprouting/fib.c
 API_XML += iprouting/iprouting.xml
 SOURCE += neighbor/settings.c neighbor/static.c neighbor/cache.c
@@ -127,7 +127,7 @@ endif
 
 test: $(INCLUDES) $(TEST_SOURCE)
 	@echo "Building $@"
-	$(Q)$(CC) -g -fprofile-arcs -ftest-coverage $(EXTRA_CFLAGS) $(NOVAPROVA_CFLAGS) -o $@ netlink.c apteryx.c module.c test.c $(TEST_SOURCE) $(NOVAPROVA_LIBS)
+	$(Q)$(CC) -g -fprofile-arcs -ftest-coverage $(EXTRA_CFLAGS) $(NOVAPROVA_CFLAGS) -o $@ netlink.c apteryx.c module.c procfs.c test.c $(TEST_SOURCE) $(NOVAPROVA_LIBS)
 	$(Q)VALGRIND_OPTS=--suppressions=valgrind.supp ./test $(TESTSPEC) 2>&1 | $(FORMAT_RESULTS)
 
 install: all

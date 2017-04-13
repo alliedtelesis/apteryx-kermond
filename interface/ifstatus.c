@@ -29,22 +29,17 @@
 static unsigned int
 if_speed_get (char *name)
 {
+    uint32_t speed = 0;
     char *file_name = NULL;
-    unsigned int speed = 0;
-    FILE *fp = NULL;
 
     if (asprintf (&file_name, "/sys/class/net/%s/speed", name) > 0)
     {
-        fp = fopen (file_name, "r");
-        if (!fp || fscanf (fp, "%u", &speed) != 1)
-        {
-            speed = 0;
-        }
-        if (fp)
-        {
-            fclose (fp);
-        }
+        speed = procfs_read_uint32 (file_name);
         free (file_name);
+    }
+    if ((int) speed == -1)
+    {
+        speed = 0;
     }
     return speed;
 }
@@ -57,35 +52,22 @@ if_speed_get (char *name)
 static unsigned int
 if_duplex_get (char *name)
 {
-    char *file_name = NULL;
     unsigned int duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_AUTO;
-    FILE *fp = NULL;
+    char *file_name = NULL;
 
-    if (asprintf (&file_name, "/sys/class/net/%s/duplex", name) < 0)
+    if (asprintf (&file_name, "/sys/class/net/%s/duplex", name) > 0)
     {
-        return duplex;
-    }
-
-    fp = fopen (file_name, "r");
-    if (fp)
-    {
-        char buf[32] = { 0 };
-
-        if (fscanf (fp, "%s\n", buf) != EOF)
+        char *sduplex = procfs_read_string (file_name);
+        if (sduplex && strcmp (sduplex, "half") == 0)
         {
-            buf[strlen (buf)] = '\0';
-            if (strcmp (buf, "half") == 0)
-            {
-                duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_HALF;
-            }
-            else if (strcmp (buf, "full") == 0)
-            {
-                duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_FULL;
-            }
+            duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_HALF;
         }
-        fclose (fp);
+        else if (sduplex && strcmp (sduplex, "full") == 0)
+        {
+            duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_FULL;
+        }
+        free (file_name);
     }
-    free (file_name);
     return duplex;
 }
 
@@ -99,6 +81,13 @@ link_to_apteryx (struct rtnl_link *link)
 {
     char phys_address[128];
     GNode *root, *ifalias, *node, *status;
+
+    /* Minimum requirements */
+    if (!link || !rtnl_link_get_name (link) || !rtnl_link_get_ifindex (link))
+    {
+        ERROR ("IFSTATUS: invalid link object\n");
+        return NULL;
+    }
 
     /* Build tree */
     root = g_node_new (strdup ("/"));
@@ -141,27 +130,43 @@ link_to_apteryx (struct rtnl_link *link)
                   g_strdup_printf ("%d", rtnl_link_get_promiscuity (link) ?
                                    INTERFACE_INTERFACES_STATUS_PROMISC_PROMISC_ON :
                                    INTERFACE_INTERFACES_STATUS_PROMISC_PROMISC_OFF));
-    APTERYX_LEAF (status, strdup ("qdisc"),
+    if (rtnl_link_get_qdisc (link))
+        APTERYX_LEAF (status, strdup ("qdisc"),
                   strdup (rtnl_link_get_qdisc (link)));
-    APTERYX_LEAF (status, strdup ("mtu"),
+    if (rtnl_link_get_mtu (link))
+        APTERYX_LEAF (status, strdup ("mtu"),
                   g_strdup_printf ("%d", rtnl_link_get_mtu (link)));
+    else
+        APTERYX_LEAF (status, strdup ("mtu"),
+                   g_strdup_printf ("%d", INTERFACE_INTERFACES_STATUS_MTU_DEFAULT));
     APTERYX_LEAF (status, strdup ("speed"),
-                  g_strdup_printf ("%d", if_speed_get (rtnl_link_get_name (link))));
-    //#define INTERFACE_INTERFACES_STATUS_MAX_SPEED
-    APTERYX_LEAF (status, strdup ("master-ifindex"),
-                  g_strdup_printf ("%d", rtnl_link_get_master (link)));
+            g_strdup_printf ("%d", if_speed_get (rtnl_link_get_name (link))));
     APTERYX_LEAF (status, strdup ("duplex"),
-                  g_strdup_printf ("%d", if_duplex_get (rtnl_link_get_name (link))));
-    //#define INTERFACE_INTERFACES_STATUS_POLARITY
-    //#define INTERFACE_INTERFACES_STATUS_MRU
-    APTERYX_LEAF (status, strdup ("arptype"),
+            g_strdup_printf ("%d", if_duplex_get (rtnl_link_get_name (link))));
+    if (rtnl_link_get_arptype (link))
+        APTERYX_LEAF (status, strdup ("arptype"),
                   g_strdup_printf ("%d", rtnl_link_get_arptype (link)));
-    APTERYX_LEAF (status, strdup ("rxq"),
+    else
+        APTERYX_LEAF (status, strdup ("arptype"),
+                  g_strdup_printf ("%d", INTERFACE_INTERFACES_STATUS_ARPTYPE_DEFAULT));
+    if (rtnl_link_get_num_rx_queues (link))
+        APTERYX_LEAF (status, strdup ("rxq"),
                   g_strdup_printf ("%d", rtnl_link_get_num_rx_queues (link)));
-    APTERYX_LEAF (status, strdup ("txqlen"),
+    else
+        APTERYX_LEAF (status, strdup ("rxq"),
+                  g_strdup_printf ("%d", INTERFACE_INTERFACES_STATUS_RXQ_DEFAULT));
+    if (rtnl_link_get_txqlen (link))
+        APTERYX_LEAF (status, strdup ("txqlen"),
                   g_strdup_printf ("%d", rtnl_link_get_txqlen (link)));
-    APTERYX_LEAF (status, strdup ("txq"),
+    else
+        APTERYX_LEAF (status, strdup ("txqlen"),
+                  g_strdup_printf ("%d", INTERFACE_INTERFACES_STATUS_TXQLEN_DEFAULT));
+    if (rtnl_link_get_num_tx_queues (link))
+        APTERYX_LEAF (status, strdup ("txq"),
                   g_strdup_printf ("%d", rtnl_link_get_num_tx_queues (link)));
+    else
+        APTERYX_LEAF (status, strdup ("txq"),
+                  g_strdup_printf ("%d", INTERFACE_INTERFACES_STATUS_TXQ_DEFAULT));
 
     return root;
 }
@@ -175,7 +180,7 @@ link_to_apteryx (struct rtnl_link *link)
 static void
 nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
 {
-    struct rtnl_link *link = (struct rtnl_link *) new_obj;
+    struct rtnl_link *link;
     char *path;
 
     /* Check action */
@@ -189,6 +194,14 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
     if (old_obj && !new_obj)
         new_obj = old_obj;
 
+    /* Check link object */
+    if (!new_obj)
+    {
+        ERROR ("IFSTATUS: missing link object\n");
+        return;
+    }
+    link = (struct rtnl_link *) new_obj;
+
     /* Debug */
     VERBOSE ("IFSTATUS: %s interface\n", action == NL_ACT_NEW ? "NEW" :
              (action == NL_ACT_DEL ? "DEL" : "CHG"));
@@ -199,7 +212,7 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
     if (action == NL_ACT_DEL)
     {
         /* Remove the if-alias */
-        path = g_strdup_printf (INTERFACE_IF_ALIAS_PATH " /%d",
+        path = g_strdup_printf (INTERFACE_IF_ALIAS_PATH "/%d",
                                 rtnl_link_get_ifindex (link));
         apteryx_set (path, NULL);
         free (path);
@@ -215,8 +228,11 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
     {
         /* Add/Update Apteryx */
         GNode *tree = link_to_apteryx (link);
-        apteryx_set_tree (tree);
-        apteryx_free_tree (tree);
+        if (tree)
+        {
+            apteryx_set_tree (tree);
+            apteryx_free_tree (tree);
+        }
     }
 }
 

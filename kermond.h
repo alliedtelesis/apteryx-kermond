@@ -53,7 +53,8 @@ extern bool kermond_verbose;
 }
 
 /* Utilities */
-#define _str(s) #s
+#define xstr(a) str(a)
+#define str(a) #a
 
 /* Modules */
 typedef struct module_table
@@ -98,5 +99,10 @@ bool netlink_init ();
 void netlink_exit ();
 bool netlink_register (char *kind, netlink_callback cb);
 void netlink_unregister (char *kind, netlink_callback cb);
+
+/* ProcFS functions */
+uint32_t procfs_read_uint32 (const char *path);
+char* procfs_read_string (const char *path);
+void procfs_write_uint32 (const char *path, uint32_t value);
 
 #endif /* _KERMOND_H_ */
