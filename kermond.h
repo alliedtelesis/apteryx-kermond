@@ -80,7 +80,7 @@ void modules_exit (void);
 void apteryx_rewatch_tree (char *path, apteryx_watch_callback cb);
 
 /* Netlink functions */
-#if LIBNL_VER_MAJ < 3 || (LIBNL_VER_MAJ >= 3 && LIBNL_VER_MIN < 3)
+#if LIBNL_VER_NUM < LIBNL_VER(3,2) || (LIBNL_VER_NUM == LIBNL_VER(3,2) && LIBNL_VER_MIC < 27)
 enum
 {
     NL_ACT_UNSPEC,
