@@ -6,3 +6,5 @@ interface/interface.h
 iprouting/iprouting.h
 neighbor/neighbor.h
 tcp/tcp.h
+gcov
+test

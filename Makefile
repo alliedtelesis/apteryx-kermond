@@ -139,8 +139,12 @@ endif
 
 test: $(INCLUDES) $(TEST_SOURCE)
 	@echo "Building $@"
-	$(Q)$(CC) -g -fprofile-arcs -ftest-coverage $(EXTRA_CFLAGS) $(NOVAPROVA_CFLAGS) -o $@ netlink.c apteryx.c module.c procfs.c test.c $(TEST_SOURCE) $(NOVAPROVA_LIBS)
+	$(Q)mkdir -p gcov
+	$(Q)$(CC) -g -fprofile-arcs -fprofile-dir=gcov -ftest-coverage $(EXTRA_CFLAGS) $(NOVAPROVA_CFLAGS) -o $@ netlink.c apteryx.c module.c procfs.c test.c $(TEST_SOURCE) $(NOVAPROVA_LIBS)
 	$(Q)VALGRIND_OPTS=--suppressions=valgrind.supp ./test $(TESTSPEC) 2>&1 | $(FORMAT_RESULTS)
+	$(Q)mv *.gcno gcov/
+	$(Q)lcov -q --capture --directory . --output-file gcov/coverage.info
+	$(Q)genhtml -q gcov/coverage.info --output-directory gcov
 
 install: all
 	@install -d $(DESTDIR)/$(PREFIX)/bin
@@ -152,6 +156,6 @@ install: all
 
 clean:
 	@echo "Cleaning..."
-	$(Q)rm -f $(DAEMON) $(OBJS) $(INCLUDES) test *.gcda *.gcno
+	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov
 
 .PHONY: all clean test indent
