@@ -104,6 +104,9 @@ TEST_SOURCE += icmp/test_icmp.c
 SOURCE += tcp/tcp.c
 API_XML += tcp/tcp.xml
 TEST_SOURCE += tcp/test_tcp.c
+SOURCE += entity/entity.c
+API_XML += entity/entity.xml
+TEST_SOURCE += entity/test_entity.c
 
 OBJS=$(SOURCE:%.c=%.o)
 INCLUDES=$(API_XML:%.xml=%.h)

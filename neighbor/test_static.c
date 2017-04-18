@@ -29,7 +29,7 @@
 #define PATHV6      NEIGHBOR_IPV6_PERMANENT_PATH "/" ADDRV6 "_" IFACE "/"
 
 static bool link_active;
-unsigned int
+static unsigned int
 mock_if_nametoindex(const char *ifname)
 {
     return link_active ? 1 : 0;
