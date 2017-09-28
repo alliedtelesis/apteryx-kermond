@@ -107,6 +107,7 @@ TEST_SOURCE += tcp/test_tcp.c
 SOURCE += entity/entity.c
 API_XML += entity/entity.xml
 TEST_SOURCE += entity/test_entity.c
+API_XML += ip/ietf-ip.xml
 
 OBJS=$(SOURCE:%.c=%.o)
 INCLUDES=$(API_XML:%.xml=%.h)
@@ -116,6 +117,10 @@ all: $(INCLUDES) $(DAEMON)
 %.h: %.xml
 	@echo "Generating "$@""
 	$(Q)$(XML2C) $<  > $@
+
+%.xml: %.yang
+	@echo "Generating "$@""
+	$(Q)pyang -f yin $< | xsltproc apteryx-xml.xslt - > $@
 
 %.o: %.c
 	@echo "Compiling "$<""
@@ -161,4 +166,5 @@ clean:
 	@echo "Cleaning..."
 	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov
 
+.SECONDARY:
 .PHONY: all clean test indent
