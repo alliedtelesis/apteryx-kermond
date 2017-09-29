@@ -51,10 +51,10 @@
 			<NODE name="*">
 			<xsl:attribute name="help">
 				<xsl:if test="child::*/@value != ''">
-					<xsl:value-of select="concat('The ', @name, ' entry with key ', child::*/@value)"/>
+					<xsl:value-of select="concat('The ', @name, ' entry with key ', child::*/@value, '.')"/>
 				</xsl:if>
 				<xsl:if test="child::*/@value = ''">
-					<xsl:value-of select="concat('The ', @name, ' entry')"/>
+					<xsl:value-of select="concat('The ', @name, ' entry', '.')"/>
 				</xsl:if>
 			</xsl:attribute>
 			<xsl:apply-templates select="node()|@*"/>
