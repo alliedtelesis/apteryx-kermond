@@ -164,7 +164,7 @@ install: all
 
 clean:
 	@echo "Cleaning..."
-	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov
+	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov ip/ietf-ip.xml
 
 .SECONDARY:
 .PHONY: all clean test indent

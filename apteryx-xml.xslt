@@ -26,11 +26,11 @@
 		</NODE>
 	</xsl:template>
 
-	<xsl:template match="*[name()='container' or name()='leaf']">
+	<xsl:template match="*[name()='container' or name()='leaf' or name()='list']">
 		<NODE>
 		<xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
 		<xsl:for-each select="child::*">
-			<xsl:if test="name(parent::*) = 'leaf' = 'leaf'">
+			<xsl:if test="name(parent::*) = 'leaf'">
 				<xsl:choose>
 					<xsl:when test="preceding::*[name() = 'config']/@value = 'false'">
 						<xsl:attribute name="mode">r</xsl:attribute>
@@ -47,7 +47,22 @@
 				<xsl:attribute name="default"><xsl:value-of select="@value"/></xsl:attribute>
 			</xsl:if>
 		</xsl:for-each>
-		<xsl:apply-templates select="node()|@*"/>
+		<xsl:if test="name() = 'list'">
+			<NODE name="*">
+			<xsl:attribute name="help">
+				<xsl:if test="child::*/@value != ''">
+					<xsl:value-of select="concat('The ', @name, ' entry with key ', child::*/@value)"/>
+				</xsl:if>
+				<xsl:if test="child::*/@value = ''">
+					<xsl:value-of select="concat('The ', @name, ' entry')"/>
+				</xsl:if>
+			</xsl:attribute>
+			<xsl:apply-templates select="node()|@*"/>
+			</NODE>
+		</xsl:if>
+		<xsl:if test="name() != 'list'">
+			<xsl:apply-templates select="node()|@*"/>
+		</xsl:if>
 		</NODE>
 	</xsl:template>
 

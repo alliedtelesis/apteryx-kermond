@@ -1,8 +1,11 @@
 *.o
 apteryx-kermond
 dot1q/dot1q.h
+entity/entity.h
 icmp/icmp.h
 interface/interface.h
+ip/ietf-ip.h
+ip/ietf-ip.xml
 iprouting/iprouting.h
 neighbor/neighbor.h
 tcp/tcp.h
