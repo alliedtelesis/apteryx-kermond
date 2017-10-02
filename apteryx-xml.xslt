@@ -41,7 +41,7 @@
 				</xsl:choose>
 			</xsl:if>
 			<xsl:if test="name() = 'description'">
-				<xsl:attribute name="help"><xsl:value-of select="."/></xsl:attribute>
+				<xsl:attribute name="help"><xsl:value-of select="normalize-space(.)"/></xsl:attribute>
 			</xsl:if>
 			<xsl:if test="name() = 'default'">
 				<xsl:attribute name="default"><xsl:value-of select="@value"/></xsl:attribute>
@@ -73,7 +73,7 @@
 				<xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
 				<xsl:attribute name="value"><xsl:value-of select="@name"/></xsl:attribute>
 				<xsl:if test="name(child::*) = 'description'">
-					<xsl:attribute name="help"><xsl:value-of select="."/></xsl:attribute>
+					<xsl:attribute name="help"><xsl:value-of select="normalize-space(.)"/></xsl:attribute>
 				</xsl:if>
 				</VALUE>
 			</xsl:if>
@@ -88,7 +88,7 @@
 				<xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
 				<xsl:attribute name="value"><xsl:value-of select="@name"/></xsl:attribute>
 				<xsl:if test="name(child::*) = 'description'">
-					<xsl:attribute name="help"><xsl:value-of select="."/></xsl:attribute>
+					<xsl:attribute name="help"><xsl:value-of select="normalize-space(.)"/></xsl:attribute>
 				</xsl:if>
 				</VALUE>
 			</xsl:if>
