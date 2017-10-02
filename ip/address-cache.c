@@ -61,14 +61,14 @@ address_to_apteryx (struct rtnl_addr *ra)
     if (rtnl_addr_get_family (ra) == AF_INET)
     {
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_IP), strdup (ip));
-        APTERYX_LEAF_INT (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH), prefixlen);
+        APTERYX_LEAF_INT (root, INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH, prefixlen);
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN),
                             strdup (INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_OTHER));
     }
     else
     {
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_IP), strdup (ip));
-        APTERYX_LEAF_INT (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_PREFIX_LENGTH), prefixlen);
+        APTERYX_LEAF_INT (root, INTERFACES_STATE_IPV6_ADDRESS_PREFIX_LENGTH, prefixlen);
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_ORIGIN),
                             strdup (INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_OTHER));
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_STATUS),
