@@ -97,9 +97,11 @@ API_XML += iprouting/iprouting.xml
 SOURCE += neighbor/settings.c
 API_XML += neighbor/neighbor.xml
 TEST_SOURCE += neighbor/test_settings.c
+
 SOURCE += icmp/icmp.c
-API_XML += icmp/icmp.xml
+API_XML += icmp/ip-icmp.xml
 TEST_SOURCE += icmp/test_icmp.c
+
 SOURCE += tcp/tcp.c
 API_XML += tcp/tcp.xml
 TEST_SOURCE += tcp/test_tcp.c
@@ -172,7 +174,7 @@ install: all
 
 clean:
 	@echo "Cleaning..."
-	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov ip/ietf-ip.xml
+	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov icmp/ip-icmp.xml ip/ietf-ip.xml
 
 .SECONDARY:
 .PHONY: all clean test indent

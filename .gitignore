@@ -2,7 +2,8 @@
 apteryx-kermond
 dot1q/dot1q.h
 entity/entity.h
-icmp/icmp.h
+icmp/ip-icmp.h
+icmp/ip-icmp.xml
 interface/interface.h
 ip/ietf-ip.h
 ip/ietf-ip.xml

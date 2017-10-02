@@ -95,8 +95,13 @@
 		</xsl:for-each>
 	</xsl:template>
 
+	<xsl:template match="*[name()='type' and @name='boolean']">
+		<VALUE name='true' value='true' />
+		<VALUE name='false' value='false' />
+	</xsl:template>
+
 	<xsl:template match="*[name()='type' and @name = 'empty']">
-		<VALUE name="TRUE" value="true"></VALUE>
+		<VALUE name="true" value="true" />
 	</xsl:template>
 
 	<xsl:template match="node()|@*">

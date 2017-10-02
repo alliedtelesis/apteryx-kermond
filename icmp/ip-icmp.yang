@@ -1,0 +1,39 @@
+module ip-icmp {
+
+  namespace "https://github.com/alliedtelesis/apteryx";
+  prefix ip-icmp;
+
+  container icmp {
+    config true;
+    description "ICMP configuration";
+    container ipv4 {
+      leaf send-destination-unreachable {
+        type boolean;
+        default "true";
+        description "Whether to send ipv4 icmp destination unreachable messages";
+      }
+      leaf error-ratelimit {
+        type uint32 {
+          range "0..2147483647";
+        }
+        default "1000";
+        description "How often to allow ipv4 icmp error messages in milliseconds";
+      }
+    }
+    container ipv6 {
+      config true;
+      leaf send-destination-unreachable {
+        type boolean;
+        default "true";
+        description "Whether to send ipv6 icmp destination unreachable messages";
+      }
+      leaf error-ratelimit {
+        type uint32 {
+          range "0..2147483647";
+        }
+        default "1000";
+        description "How often to allow ipv6 icmp error messages in milliseconds";
+      }
+    }
+  }
+}

@@ -18,7 +18,38 @@
  * along with this library. If not, see <http://www.gnu.org/licenses/>
  */
 #include "kermond.h"
-#include "icmp.h"
+#include "ip-icmp.h"
+
+/**
+ * Parse true/false
+ * @param value string containing formatted true/false
+ * @param defvalue result if there is no match or value is null
+ * @return parsed boolean version of true/false
+ */
+static bool
+parse_boolean (const char *path, const char *value, bool defvalue)
+{
+    if (value &&
+       (strcasecmp (value, "true") == 0 ||
+        strcasecmp (value, "yes") == 0 ||
+        strcmp (value, "1") == 0))
+    {
+        return true;
+    }
+    else if (value &&
+            (strcasecmp (value, "false") == 0 ||
+             strcasecmp (value, "no") == 0 ||
+             strcmp (value, "0") == 0))
+    {
+        return false;
+    }
+    else if (value)
+    {
+        ERROR ("ICMP: Invalid %s value (%s) using default (%d)\n",
+                path, value, defvalue);
+    }
+    return defvalue;
+}
 
 /**
  * Process apteryx watch callback for ICMPv4 settings
@@ -35,7 +66,7 @@ watch_icmpv4_settings (const char *path, const char *value)
     int rc = 0;
 
     /* Parse family, index and the parameter that has changed */
-    if (!path || sscanf (path, IP_V4_ICMP_PATH "/%64s", parameter) != 1)
+    if (!path || sscanf (path, ICMP_IPV4_PATH "/%64s", parameter) != 1)
     {
         ERROR ("ICMP: Unexpected path: %s\n", path);
         return false;
@@ -44,17 +75,7 @@ watch_icmpv4_settings (const char *path, const char *value)
     /* send-destination-unreachable */
     if (strcmp (parameter, "send-destination-unreachable") == 0)
     {
-        if (!value || sscanf (value, "%d", &val) != 1 ||
-            (val != IP_V4_ICMP_SEND_DESTINATION_UNREACHABLE_DISABLE &&
-             val != IP_V4_ICMP_SEND_DESTINATION_UNREACHABLE_ENABLE))
-        {
-            val = IP_V4_ICMP_SEND_DESTINATION_UNREACHABLE_DEFAULT;
-            if (value)
-            {
-                ERROR ("ICMP: Invalid send-destination-unreachable (%s) using default (%d)\n", value, val);
-            }
-        }
-        if (val == IP_V4_ICMP_SEND_DESTINATION_UNREACHABLE_DISABLE)
+        if (parse_boolean (path, value, true) == false)
         {
             /* Add the rule only if it does not exist in the table */
             rc = system
@@ -77,7 +98,7 @@ watch_icmpv4_settings (const char *path, const char *value)
         /* Use default if an invalid value is set */
         if (!value || sscanf (value, "%d", &val) != 1 || val < 0 || val > 2147483647)
         {
-            val = IP_V4_ICMP_ERROR_RATELIMIT_DEFAULT;
+            val = ICMP_IPV4_ERROR_RATELIMIT_DEFAULT;
             if (value)
             {
                 ERROR ("ICMP: Invalid ratelimit value (%s) using default (%d)\n", value, val);
@@ -117,7 +138,7 @@ watch_icmpv6_settings (const char *path, const char *value)
     int rc = 0;
 
     /* Parse family, index and the parameter that has changed */
-    if (!path || sscanf (path, IP_V6_ICMP_PATH "/%64s", parameter) != 1)
+    if (!path || sscanf (path, ICMP_IPV6_PATH "/%64s", parameter) != 1)
     {
         ERROR ("ICMP: Unexpected path: %s\n", path);
         return false;
@@ -126,17 +147,7 @@ watch_icmpv6_settings (const char *path, const char *value)
     /* send-destination-unreachable */
     if (strcmp (parameter, "send-destination-unreachable") == 0)
     {
-        if (!value || sscanf (value, "%d", &val) != 1 ||
-            (val != IP_V6_ICMP_SEND_DESTINATION_UNREACHABLE_DISABLE &&
-             val != IP_V6_ICMP_SEND_DESTINATION_UNREACHABLE_ENABLE))
-        {
-            val = IP_V6_ICMP_SEND_DESTINATION_UNREACHABLE_DEFAULT;
-            if (value)
-            {
-                ERROR ("ICMP: Invalid send-destination-unreachable (%s) using default (%d)\n", value, val);
-            }
-        }
-        if (val == IP_V6_ICMP_SEND_DESTINATION_UNREACHABLE_DISABLE)
+        if (parse_boolean (path, value, true) == false)
         {
             /* Add the rule only if it does not exist in the table */
             rc = system
@@ -159,7 +170,7 @@ watch_icmpv6_settings (const char *path, const char *value)
         /* Use default if an invalid value is set */
         if (!value || sscanf (value, "%d", &val) != 1 || val < 0 || val > 2147483647)
         {
-            val = IP_V6_ICMP_ERROR_RATELIMIT_DEFAULT;
+            val = ICMP_IPV6_ERROR_RATELIMIT_DEFAULT;
             if (value)
             {
                 ERROR ("ICMP: Invalid ratelimit value (%s) using default (%d)\n", value, val);
@@ -214,12 +225,12 @@ icmp_start ()
     DEBUG ("ICMP: Starting\n");
 
     /* Add Apteryx watches */
-    apteryx_watch (IP_V4_ICMP_PATH "/*", watch_icmpv4_settings);
-    apteryx_watch (IP_V6_ICMP_PATH "/*", watch_icmpv6_settings);
+    apteryx_watch (ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
+    apteryx_watch (ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (IP_V4_ICMP_PATH, watch_icmpv4_settings);
-    apteryx_rewatch_tree (IP_V6_ICMP_PATH, watch_icmpv6_settings);
+    apteryx_rewatch_tree (ICMP_IPV4_PATH, watch_icmpv4_settings);
+    apteryx_rewatch_tree (ICMP_IPV6_PATH, watch_icmpv6_settings);
 
     return true;
 }
@@ -233,8 +244,8 @@ icmp_exit ()
     DEBUG ("ICMP: Exiting\n");
 
     /* Remove Apteryx watches */
-    apteryx_unwatch (IP_V4_ICMP_PATH "/*", watch_icmpv4_settings);
-    apteryx_unwatch (IP_V6_ICMP_PATH "/*", watch_icmpv6_settings);
+    apteryx_unwatch (ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
+    apteryx_unwatch (ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
 }
 
 MODULE_CREATE ("icmp", icmp_init, icmp_start, icmp_exit);
