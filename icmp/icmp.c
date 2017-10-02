@@ -21,37 +21,6 @@
 #include "ip-icmp.h"
 
 /**
- * Parse true/false
- * @param value string containing formatted true/false
- * @param defvalue result if there is no match or value is null
- * @return parsed boolean version of true/false
- */
-static bool
-parse_boolean (const char *path, const char *value, bool defvalue)
-{
-    if (value &&
-       (strcasecmp (value, "true") == 0 ||
-        strcasecmp (value, "yes") == 0 ||
-        strcmp (value, "1") == 0))
-    {
-        return true;
-    }
-    else if (value &&
-            (strcasecmp (value, "false") == 0 ||
-             strcasecmp (value, "no") == 0 ||
-             strcmp (value, "0") == 0))
-    {
-        return false;
-    }
-    else if (value)
-    {
-        ERROR ("ICMP: Invalid %s value (%s) using default (%d)\n",
-                path, value, defvalue);
-    }
-    return defvalue;
-}
-
-/**
  * Process apteryx watch callback for ICMPv4 settings
  * @param path path to variable that has changed
  * @param value new value (NULL means default)
@@ -75,7 +44,7 @@ watch_icmpv4_settings (const char *path, const char *value)
     /* send-destination-unreachable */
     if (strcmp (parameter, "send-destination-unreachable") == 0)
     {
-        if (parse_boolean (path, value, true) == false)
+        if (apteryx_parse_boolean (path, value, true) == false)
         {
             /* Add the rule only if it does not exist in the table */
             rc = system
@@ -147,7 +116,7 @@ watch_icmpv6_settings (const char *path, const char *value)
     /* send-destination-unreachable */
     if (strcmp (parameter, "send-destination-unreachable") == 0)
     {
-        if (parse_boolean (path, value, true) == false)
+        if (apteryx_parse_boolean (path, value, true) == false)
         {
             /* Add the rule only if it does not exist in the table */
             rc = system

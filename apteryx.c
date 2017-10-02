@@ -53,3 +53,34 @@ apteryx_rewatch_tree (char *path, apteryx_watch_callback cb)
         apteryx_free_tree (tree);
     }
 }
+
+/**
+ * Parse true/false
+ * @param value string containing formatted true/false
+ * @param defvalue result if there is no match or value is null
+ * @return parsed boolean version of true/false
+ */
+bool
+apteryx_parse_boolean (const char *path, const char *value, bool defvalue)
+{
+    if (value &&
+       (strcasecmp (value, "true") == 0 ||
+        strcasecmp (value, "yes") == 0 ||
+        strcmp (value, "1") == 0))
+    {
+        return true;
+    }
+    else if (value &&
+            (strcasecmp (value, "false") == 0 ||
+             strcasecmp (value, "no") == 0 ||
+             strcmp (value, "0") == 0))
+    {
+        return false;
+    }
+    else if (value)
+    {
+        ERROR ("Invalid %s value (%s) using default (%d)\n",
+                path, value, defvalue);
+    }
+    return defvalue;
+}

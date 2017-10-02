@@ -78,6 +78,7 @@ void modules_exit (void);
 
 /* Apteryx helpers */
 void apteryx_rewatch_tree (char *path, apteryx_watch_callback cb);
+bool apteryx_parse_boolean (const char *path, const char *value, bool defvalue);
 
 /* Netlink functions */
 #if LIBNL_VER_NUM < LIBNL_VER(3,2) || (LIBNL_VER_NUM == LIBNL_VER(3,2) && LIBNL_VER_MIC < 27)

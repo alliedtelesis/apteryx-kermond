@@ -1,0 +1,68 @@
+module ip-neighbor {
+
+  namespace "https://github.com/alliedtelesis/apteryx";
+  prefix ip-neighbor;
+
+  container ip {
+    container neighbor {
+      config true;
+      description "Neighbor configuration";
+      container ipv4 {
+        leaf opportunistic-nd {
+          type boolean;
+          default "false";
+          description "Opportunistic Neighbor Discovery";
+        }
+        list interfaces {
+          key "name";
+          leaf name {
+            type string;
+            description "The name of the interface";
+          }
+          leaf aging-timeout {
+            type uint32 {
+              range "0..432000";
+            }
+            default "300";
+            description "Aging timeout (sec)";
+          }
+          leaf mac-disparity {
+            type boolean;
+            default "false";
+            description "Reception of ARP packets that contain a multicast MAC address";
+          }
+          leaf proxy-arp {
+             type enumeration {
+               enum disabled {
+                 description "Proxy ARP is disabled";
+               }
+               enum enabled {
+                 description "Proxy ARP is enabled";
+               }
+               enum local {
+                 description "Local Proxy ARP is enabled";
+               }
+               enum both {
+                 description "Both Local Proxy ARP and Proxy ARP are enabled";
+               }
+             }
+             default "disabled";
+             description "Allow Proxy ARP";
+          }
+          leaf optimistic-nd {
+            type boolean;
+            default "true";
+            description "Optimistic Neighbor Discovery";
+          }
+        }
+      }
+      container ipv6 {
+        leaf opportunistic-nd {
+          type boolean;
+          default "false";
+          description "Opportunistic Neighbor Discovery";
+        }
+      }
+    }
+  }
+}

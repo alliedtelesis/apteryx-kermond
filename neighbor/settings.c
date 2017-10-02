@@ -18,7 +18,7 @@
  * along with this library. If not, see <http://www.gnu.org/licenses/>
  */
 #include "kermond.h"
-#include "neighbor.h"
+#include "ip-neighbor.h"
 
 static bool
 system_call (char *cmd)
@@ -34,90 +34,6 @@ system_call (char *cmd)
 }
 
 static bool
-global_opportunistic_nd (const char *value)
-{
-    int mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-    if ((value && sscanf (value, "%d", &mode) != 1) ||
-        (mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
-         mode != NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
-    {
-        mode = NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-               value, mode);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.aggressive_nd=%d", mode);
-    return system_call (cmd);
-}
-
-static bool
-interface_aging_timeout (const char *ifname, const char *value)
-{
-    int timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
-    if ((value && sscanf (value, "%d", &timeout) != 1) ||
-        timeout < 0 || timeout > 432000)
-    {
-        timeout = NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid aging-timeout value (%s) using default (%d)\n",
-               value, timeout);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.base_reachable_time_ms=%d",
-                           ifname, timeout * 1000);
-    return system_call (cmd);
-}
-
-static bool
-interface_mac_disparity (const char *ifname, const char *value)
-{
-    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
-    if ((value && sscanf (value, "%d", &mode) != 1) ||
-        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_ENABLED &&
-         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DISABLED))
-    {
-        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid mac-disparity value (%s) using default (%d)\n",
-               value, mode);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.arp_mac_disparity=%d",
-            ifname, mode);
-    return system_call (cmd);
-}
-
-static bool
-interface_proxy_arp (const char *ifname, const char *value)
-{
-    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
-    if ((value && sscanf (value, "%u", &mode) != 1) ||
-        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DISABLED &&
-         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_ENABLED &&
-         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_LOCAL &&
-         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_BOTH))
-    {
-        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid proxy-arp value (%s) using default (%d)\n", value,
-               mode);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.proxy_arp=%d", ifname, mode);
-    return system_call (cmd);
-}
-
-static bool
-interface_opportunistic_nd (const char *ifname, const char *value)
-{
-    int mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
-    if ((value && sscanf (value, "%u", &mode) != 1) ||
-        (mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DISABLED &&
-         mode != NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_ENABLED))
-    {
-        mode = NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-               value, mode);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.optimistic_nd=%d",
-            ifname, mode);
-    return system_call (cmd);
-}
-
-static bool
 watch_ipv4_settings (const char *path, const char *value)
 {
     char ifname[64];
@@ -126,53 +42,82 @@ watch_ipv4_settings (const char *path, const char *value)
     DEBUG ("NEIGHBOR: %s = %s\n", path, value);
 
     /* Opportunistic Neighbor Discovery */
-    if (path && strcmp (path, NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH) == 0)
+    if (path && strcmp (path, IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH) == 0)
     {
-        return global_opportunistic_nd (value);
+        int mode = apteryx_parse_boolean (path, value, false) ? 1 : 0;
+        char *cmd = g_strdup_printf ("sysctl -w net.ipv4.aggressive_nd=%d", mode);
+        return system_call (cmd);
     }
     /* Interface specific */
-    else if (path && sscanf (path, NEIGHBOR_IPV4_SETTINGS_INTERFACES_PATH "/%64[^/]/%64s",
+    else if (path && sscanf (path, IP_NEIGHBOR_IPV4_INTERFACES_PATH "/%64[^/]/%64s",
                      ifname, parameter) == 2)
     {
         /* Aging Timeout */
-        if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT) == 0)
+        if (strcmp (parameter, IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT) == 0)
         {
-            return interface_aging_timeout (ifname, value);
+            int timeout = IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT_DEFAULT;
+            if ((value && sscanf (value, "%d", &timeout) != 1) ||
+                timeout < 0 || timeout > 432000)
+            {
+                timeout = IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT_DEFAULT;
+                ERROR ("NEIGHBOR: Invalid aging-timeout value (%s) using default (%d)\n",
+                       value, timeout);
+            }
+            char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.base_reachable_time_ms=%d",
+                                   ifname, timeout * 1000);
+            return system_call (cmd);
         }
         /* MAC Disparity */
-        else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY) == 0)
+        else if (strcmp (parameter, IP_NEIGHBOR_IPV4_INTERFACES_MAC_DISPARITY) == 0)
         {
-            return interface_mac_disparity (ifname, value);
+            int mode = apteryx_parse_boolean (path, value, false) ? 1 : 0;
+            char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.arp_mac_disparity=%d",
+                        ifname, mode);
+            return system_call (cmd);
         }
         /* Proxy Arp */
-        else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP) == 0)
+        else if (strcmp (parameter, IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP) == 0)
         {
-            return interface_proxy_arp (ifname, value);
+            int mode = 0;
+            if (value && strcmp (value,
+                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_DISABLED) == 0)
+            {
+                mode = 0;
+            }
+            else if (value && strcmp (value,
+                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_ENABLED) == 0)
+            {
+                mode = 1;
+            }
+            else if (value && strcmp (value,
+                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_LOCAL) == 0)
+            {
+                mode = 2;
+            }
+            else if (value && strcmp (value,
+                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_BOTH) == 0)
+            {
+                mode = 3;
+            }
+            else if (value)
+            {
+                ERROR ("Invalid %s value (%s) using default (%d)\n",
+                                path, value, mode);
+            }
+            char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.proxy_arp=%d", ifname, mode);
+            return system_call (cmd);
         }
         /* Opportunistic Neighbor Discovery */
-        else if (strcmp (parameter, NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND) == 0)
+        else if (strcmp (parameter, IP_NEIGHBOR_IPV4_INTERFACES_OPTIMISTIC_ND) == 0)
         {
-            return interface_opportunistic_nd (ifname, value);
+            int mode = apteryx_parse_boolean (path, value, true) ? 1 : 0;
+            char *cmd = g_strdup_printf ("sysctl -w net.ipv4.neigh.%s.optimistic_nd=%d",
+                        ifname, mode);
+            return system_call (cmd);
         }
     }
     ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
     return false;
-}
-
-static bool
-globalv6_opportunistic_nd (const char *value)
-{
-    int mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-    if ((value && sscanf (value, "%d", &mode) != 1) ||
-        (mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_ENABLED &&
-         mode != NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DISABLED))
-    {
-        mode = NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_DEFAULT;
-        ERROR ("NEIGHBOR: Invalid opportunistic-nd value (%s) using default (%d)\n",
-               value, mode);
-    }
-    char *cmd = g_strdup_printf ("sysctl -w net.ipv6.icmp.aggressive_nd=%d", mode);
-    return system_call (cmd);
 }
 
 /**
@@ -185,9 +130,11 @@ static bool
 watch_ipv6_settings (const char *path, const char *value)
 {
     /* Opportunistic Neighbor Discovery */
-    if (path && strcmp (path, NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH) == 0)
+    if (path && strcmp (path, IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH) == 0)
     {
-        return globalv6_opportunistic_nd (value);
+        int mode = apteryx_parse_boolean (path, value, false) ? 1 : 0;
+        char *cmd = g_strdup_printf ("sysctl -w net.ipv6.icmp.aggressive_nd=%d", mode);
+        return system_call (cmd);
     }
     ERROR ("NEIGHBOR: Unexpected path: %s\n", path);
     return false;
@@ -203,12 +150,12 @@ neighbor_start ()
     DEBUG ("NEIGHBOR: Starting\n");
 
     /* Setup Apteryx watchers */
-    apteryx_watch (NEIGHBOR_IPV4_SETTINGS_PATH "/*", watch_ipv4_settings);
-    apteryx_watch (NEIGHBOR_IPV6_SETTINGS_PATH "/*", watch_ipv6_settings);
+    apteryx_watch (IP_NEIGHBOR_IPV4_PATH "/*", watch_ipv4_settings);
+    apteryx_watch (IP_NEIGHBOR_IPV6_PATH "/*", watch_ipv6_settings);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (NEIGHBOR_IPV4_SETTINGS_PATH, watch_ipv4_settings);
-    apteryx_rewatch_tree (NEIGHBOR_IPV6_SETTINGS_PATH, watch_ipv6_settings);
+    apteryx_rewatch_tree (IP_NEIGHBOR_IPV4_PATH, watch_ipv4_settings);
+    apteryx_rewatch_tree (IP_NEIGHBOR_IPV6_PATH, watch_ipv6_settings);
 
     return true;
 }
@@ -222,8 +169,8 @@ neighbor_exit ()
     DEBUG ("NEIGHBOR: Exiting\n");
 
     /* Remove Apteryx watchers */
-    apteryx_unwatch (NEIGHBOR_IPV4_SETTINGS_PATH "/*", watch_ipv4_settings);
-    apteryx_unwatch (NEIGHBOR_IPV6_SETTINGS_PATH "/*", watch_ipv6_settings);
+    apteryx_unwatch (IP_NEIGHBOR_IPV4_PATH "/*", watch_ipv4_settings);
+    apteryx_unwatch (IP_NEIGHBOR_IPV6_PATH "/*", watch_ipv6_settings);
 }
 
 MODULE_CREATE ("neighbor-settings", NULL, neighbor_start, neighbor_exit);

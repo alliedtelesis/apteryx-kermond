@@ -23,7 +23,7 @@
 
 static GList *cmds = NULL;
 
-#define PATH    NEIGHBOR_IPV4_SETTINGS_INTERFACES_PATH "/eth1/"
+#define PATH    IP_NEIGHBOR_IPV4_INTERFACES_PATH "/eth1/"
 
 static int
 mock_system (const char *cmd)
@@ -60,14 +60,14 @@ void test_neigh_path_null ()
 void test_neigh_invalid_path ()
 {
     setup_test (NULL, "Unexpected path");
-    NP_ASSERT_FALSE (watch_ipv4_settings (NEIGHBOR_IPV4_PATH, "5"));
+    NP_ASSERT_FALSE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_PATH, "5"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_invalid_parameter ()
 {
     setup_test (NULL, "Unexpected path");
-    NP_ASSERT_FALSE (watch_ipv4_settings (NEIGHBOR_IPV4_SETTINGS_PATH "/speed", "5"));
+    NP_ASSERT_FALSE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_PATH "/speed", "5"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -76,28 +76,28 @@ void test_neigh_invalid_parameter ()
 void test_neigh_opp_nd_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.aggressive_nd=0", NULL);
-    NP_ASSERT_TRUE (watch_ipv4_settings (NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH, NULL));
+    NP_ASSERT_TRUE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_opp_nd_value_disable ()
 {
     setup_test ("sysctl -w net.ipv4.aggressive_nd=0", NULL);
-    NP_ASSERT_TRUE (watch_ipv4_settings (NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH, "0"));
+    NP_ASSERT_TRUE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_opp_nd_value_enable ()
 {
     setup_test ("sysctl -w net.ipv4.aggressive_nd=1", NULL);
-    NP_ASSERT_TRUE (watch_ipv4_settings (NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH, "1"));
+    NP_ASSERT_TRUE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH, "1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_opp_nd_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv4.aggressive_nd=0", "Invalid opportunistic-nd");
-    NP_ASSERT_TRUE (watch_ipv4_settings (NEIGHBOR_IPV4_SETTINGS_OPPORTUNISTIC_ND_PATH, "dog"));
+    setup_test ("sysctl -w net.ipv4.aggressive_nd=0", "Invalid");
+    NP_ASSERT_TRUE (watch_ipv4_settings (IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -107,7 +107,7 @@ void test_neigh_aging_timeout_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, NULL));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -115,7 +115,7 @@ void test_neigh_aging_timeout_value_0 ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, "0"));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -123,31 +123,31 @@ void test_neigh_aging_timeout_value_432000 ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=432000000", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, "432000"));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, "432000"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_aging_timeout_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid aging-timeout");
+    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, "dog"));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_aging_timeout_value_too_low ()
 {
-    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid aging-timeout");
+    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, "-1"));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, "-1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_aging_timeout_value_too_high ()
 {
-    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid aging-timeout");
+    setup_test ("sysctl -w net.ipv4.neigh.eth1.base_reachable_time_ms=300000", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_AGING_TIMEOUT, "432001"));
+            IP_NEIGHBOR_IPV4_INTERFACES_AGING_TIMEOUT, "432001"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -157,7 +157,7 @@ void test_neigh_mac_disparity_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.arp_mac_disparity=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY, NULL));
+            IP_NEIGHBOR_IPV4_INTERFACES_MAC_DISPARITY, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -165,7 +165,7 @@ void test_neigh_mac_disparity_value_disable ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.arp_mac_disparity=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY, "0"));
+            IP_NEIGHBOR_IPV4_INTERFACES_MAC_DISPARITY, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -173,15 +173,15 @@ void test_neigh_mac_disparity_value_enable ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.arp_mac_disparity=1", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY, "1"));
+            IP_NEIGHBOR_IPV4_INTERFACES_MAC_DISPARITY, "1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_mac_disparity_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv4.conf.eth1.arp_mac_disparity=0", "Invalid mac-disparity");
+    setup_test ("sysctl -w net.ipv4.conf.eth1.arp_mac_disparity=0", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_MAC_DISPARITY, "dog"));
+            IP_NEIGHBOR_IPV4_INTERFACES_MAC_DISPARITY, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -191,7 +191,7 @@ void test_neigh_proxy_arp_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, NULL));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -199,7 +199,7 @@ void test_neigh_proxy_arp_value_disable ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, "0"));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, "disabled"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -207,7 +207,7 @@ void test_neigh_proxy_arp_value_enable ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=1", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, "1"));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, "enabled"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -215,7 +215,7 @@ void test_neigh_proxy_arp_value_local ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=2", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, "2"));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, "local"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -223,16 +223,16 @@ void test_neigh_proxy_arp_value_both ()
 {
     setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=3", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, "3"));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, "both"));
     NP_ASSERT_NULL (cmds);
 }
 
 
 void test_neigh_proxy_arp_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=0", "Invalid proxy-arp");
+    setup_test ("sysctl -w net.ipv4.conf.eth1.proxy_arp=0", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_PROXY_ARP, "dog"));
+            IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -242,7 +242,7 @@ void test_neigh_interface_opp_nd_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.optimistic_nd=1", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND, NULL));
+            IP_NEIGHBOR_IPV4_INTERFACES_OPTIMISTIC_ND, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -250,7 +250,7 @@ void test_neigh_interface_opp_nd_value_disable ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.optimistic_nd=0", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND, "0"));
+            IP_NEIGHBOR_IPV4_INTERFACES_OPTIMISTIC_ND, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -258,15 +258,15 @@ void test_neigh_interface_opp_nd_value_enable ()
 {
     setup_test ("sysctl -w net.ipv4.neigh.eth1.optimistic_nd=1", NULL);
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND, "1"));
+            IP_NEIGHBOR_IPV4_INTERFACES_OPTIMISTIC_ND, "1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neigh_interface_opp_nd_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv4.neigh.eth1.optimistic_nd=1", "Invalid opportunistic-nd");
+    setup_test ("sysctl -w net.ipv4.neigh.eth1.optimistic_nd=1", "Invalid");
     NP_ASSERT_TRUE (watch_ipv4_settings (PATH
-            NEIGHBOR_IPV4_SETTINGS_INTERFACES_OPTIMISTIC_ND, "dog"));
+            IP_NEIGHBOR_IPV4_INTERFACES_OPTIMISTIC_ND, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -282,14 +282,14 @@ void test_neighv6_path_null ()
 void test_neighv6_invalid_path ()
 {
     setup_test (NULL, "Unexpected path");
-    NP_ASSERT_FALSE (watch_ipv6_settings (NEIGHBOR_IPV6_PATH, "5"));
+    NP_ASSERT_FALSE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_PATH, "5"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neighv6_invalid_parameter ()
 {
     setup_test (NULL, "Unexpected path");
-    NP_ASSERT_FALSE (watch_ipv6_settings (NEIGHBOR_IPV6_SETTINGS_PATH "/speed", "5"));
+    NP_ASSERT_FALSE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_PATH "/speed", "5"));
     NP_ASSERT_NULL (cmds);
 }
 
@@ -298,27 +298,27 @@ void test_neighv6_invalid_parameter ()
 void test_neighv6_opp_nd_value_null ()
 {
     setup_test ("sysctl -w net.ipv6.icmp.aggressive_nd=0", NULL);
-    NP_ASSERT_TRUE (watch_ipv6_settings (NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH, NULL));
+    NP_ASSERT_TRUE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neighv6_opp_nd_value_disable ()
 {
     setup_test ("sysctl -w net.ipv6.icmp.aggressive_nd=0", NULL);
-    NP_ASSERT_TRUE (watch_ipv6_settings (NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH, "0"));
+    NP_ASSERT_TRUE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neighv6_opp_nd_value_enable ()
 {
     setup_test ("sysctl -w net.ipv6.icmp.aggressive_nd=1", NULL);
-    NP_ASSERT_TRUE (watch_ipv6_settings (NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH, "1"));
+    NP_ASSERT_TRUE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH, "1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_neighv6_opp_nd_value_invalid ()
 {
-    setup_test ("sysctl -w net.ipv6.icmp.aggressive_nd=0", "Invalid opportunistic-nd");
-    NP_ASSERT_TRUE (watch_ipv6_settings (NEIGHBOR_IPV6_SETTINGS_OPPORTUNISTIC_ND_PATH, "dog"));
+    setup_test ("sysctl -w net.ipv6.icmp.aggressive_nd=0", "Invalid");
+    NP_ASSERT_TRUE (watch_ipv6_settings (IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH, "dog"));
     NP_ASSERT_NULL (cmds);
 }
