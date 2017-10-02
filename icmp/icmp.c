@@ -66,7 +66,7 @@ watch_icmpv4_settings (const char *path, const char *value)
     int rc = 0;
 
     /* Parse family, index and the parameter that has changed */
-    if (!path || sscanf (path, ICMP_IPV4_PATH "/%64s", parameter) != 1)
+    if (!path || sscanf (path, IP_ICMP_IPV4_PATH "/%64s", parameter) != 1)
     {
         ERROR ("ICMP: Unexpected path: %s\n", path);
         return false;
@@ -98,7 +98,7 @@ watch_icmpv4_settings (const char *path, const char *value)
         /* Use default if an invalid value is set */
         if (!value || sscanf (value, "%d", &val) != 1 || val < 0 || val > 2147483647)
         {
-            val = ICMP_IPV4_ERROR_RATELIMIT_DEFAULT;
+            val = IP_ICMP_IPV4_ERROR_RATELIMIT_DEFAULT;
             if (value)
             {
                 ERROR ("ICMP: Invalid ratelimit value (%s) using default (%d)\n", value, val);
@@ -138,7 +138,7 @@ watch_icmpv6_settings (const char *path, const char *value)
     int rc = 0;
 
     /* Parse family, index and the parameter that has changed */
-    if (!path || sscanf (path, ICMP_IPV6_PATH "/%64s", parameter) != 1)
+    if (!path || sscanf (path, IP_ICMP_IPV6_PATH "/%64s", parameter) != 1)
     {
         ERROR ("ICMP: Unexpected path: %s\n", path);
         return false;
@@ -170,7 +170,7 @@ watch_icmpv6_settings (const char *path, const char *value)
         /* Use default if an invalid value is set */
         if (!value || sscanf (value, "%d", &val) != 1 || val < 0 || val > 2147483647)
         {
-            val = ICMP_IPV6_ERROR_RATELIMIT_DEFAULT;
+            val = IP_ICMP_IPV6_ERROR_RATELIMIT_DEFAULT;
             if (value)
             {
                 ERROR ("ICMP: Invalid ratelimit value (%s) using default (%d)\n", value, val);
@@ -225,12 +225,12 @@ icmp_start ()
     DEBUG ("ICMP: Starting\n");
 
     /* Add Apteryx watches */
-    apteryx_watch (ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
-    apteryx_watch (ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
+    apteryx_watch (IP_ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
+    apteryx_watch (IP_ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (ICMP_IPV4_PATH, watch_icmpv4_settings);
-    apteryx_rewatch_tree (ICMP_IPV6_PATH, watch_icmpv6_settings);
+    apteryx_rewatch_tree (IP_ICMP_IPV4_PATH, watch_icmpv4_settings);
+    apteryx_rewatch_tree (IP_ICMP_IPV6_PATH, watch_icmpv6_settings);
 
     return true;
 }
@@ -244,8 +244,8 @@ icmp_exit ()
     DEBUG ("ICMP: Exiting\n");
 
     /* Remove Apteryx watches */
-    apteryx_unwatch (ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
-    apteryx_unwatch (ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
+    apteryx_unwatch (IP_ICMP_IPV4_PATH "/*", watch_icmpv4_settings);
+    apteryx_unwatch (IP_ICMP_IPV6_PATH "/*", watch_icmpv6_settings);
 }
 
 MODULE_CREATE ("icmp", icmp_init, icmp_start, icmp_exit);
