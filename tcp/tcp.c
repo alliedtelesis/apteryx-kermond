@@ -18,7 +18,7 @@
  * along with this library. If not, see <http://www.gnu.org/licenses/>
  */
 #include "kermond.h"
-#include "tcp.h"
+#include "ip-tcp.h"
 
 /**
  * Process apteryx watch callback for TCP settings

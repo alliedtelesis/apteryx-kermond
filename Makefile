@@ -103,8 +103,9 @@ API_XML += icmp/ip-icmp.xml
 TEST_SOURCE += icmp/test_icmp.c
 
 SOURCE += tcp/tcp.c
-API_XML += tcp/tcp.xml
+API_XML += tcp/ip-tcp.xml
 TEST_SOURCE += tcp/test_tcp.c
+
 SOURCE += entity/entity.c
 API_XML += entity/entity.xml
 TEST_SOURCE += entity/test_entity.c
@@ -174,7 +175,7 @@ install: all
 
 clean:
 	@echo "Cleaning..."
-	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov icmp/ip-icmp.xml ip/ietf-ip.xml
+	$(Q)rm -fr $(DAEMON) $(OBJS) $(INCLUDES) test gcov icmp/ip-icmp.xml ip/ietf-ip.xml tcp/ip-tcp.xml
 
 .SECONDARY:
 .PHONY: all clean test indent

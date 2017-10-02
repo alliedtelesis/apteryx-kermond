@@ -70,41 +70,41 @@ void test_tcp_invalid_parameter ()
 void test_tcp_synack_value_null ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=5", NULL);
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, NULL));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, NULL));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_tcp_synack_value_0 ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=0", NULL);
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, "0"));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, "0"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_tcp_synack_value_255 ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=255", NULL);
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, "255"));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, "255"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_tcp_synack_value_invalid ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=5", "Invalid synack-retries");
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, "dog"));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, "dog"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_tcp_synack_value_negative ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=5", "Invalid synack-retries");
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, "-1"));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, "-1"));
     NP_ASSERT_NULL (cmds);
 }
 
 void test_tcp_synack_value_too_high ()
 {
     setup_test ("sysctl -w net.ipv4.tcp_synack_retries=5", "Invalid synack-retries");
-    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES_PATH, "256"));
+    NP_ASSERT_TRUE (watch_tcp_settings (IP_TCP_SYNACK_RETRIES, "256"));
     NP_ASSERT_NULL (cmds);
 }

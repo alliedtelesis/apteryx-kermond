@@ -1,0 +1,19 @@
+module ip-tcp {
+
+  namespace "https://github.com/alliedtelesis/apteryx";
+  prefix ip-tcp;
+
+  container ip {
+    container tcp {
+      config true;
+      description "TCP configuration";
+      leaf synack-retries {
+        type uint8 {
+          range "0..255";
+        }
+        default "5";
+        description "Maximum number of retries sending SYN ACKs for half open TCP connections, affects half open connection timeout";
+      }
+    }
+  }
+}
