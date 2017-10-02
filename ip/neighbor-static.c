@@ -1,5 +1,5 @@
 /**
- * @file static.c
+ * @file neighbor-static.c
  * Manage static neighbors
  *
  * Copyright 2017, Allied Telesis Labs New Zealand, Ltd
@@ -20,7 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/neighbour.h>
 #include <netlink/route/link.h>
-#include "neighbor.h"
+#include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
 extern unsigned int if_nametoindex (const char *ifname);
@@ -51,8 +51,8 @@ apteryx_to_neighbor (const char *path, const char *lladdr)
 
     /* Parse family, ip and iface */
     if (!path ||
-        sscanf (path, NEIGHBOR_PATH "/ipv%d/permanent/%64[^_]_%64[^/]/%64s",
-                &family, ip, ifname, parameter) != 4)
+        sscanf (path, INTERFACES_PATH "/%64[^/]/ipv%d/neighbor/%64[^/]/%64s",
+                ifname, &family, ip, parameter) != 4)
     {
         ERROR ("NEIGHBOR: Invalid static neighbor: %s = %s\n",
                 path, lladdr);
@@ -60,10 +60,8 @@ apteryx_to_neighbor (const char *path, const char *lladdr)
     }
 
     /* Currently only process phys-address parameter */
-    if (strcmp (parameter, NEIGHBOR_IPV4_PERMANENT_PHYS_ADDRESS) != 0)
+    if (strcmp (parameter, INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS) != 0)
     {
-        ERROR ("NEIGHBOR: Unexpected static neighbor parameter: %s\n",
-                parameter);
         return NULL;
     }
 
@@ -109,7 +107,6 @@ apteryx_to_neighbor (const char *path, const char *lladdr)
         rtnl_neigh_set_lladdr (rn, addr);
         nl_addr_put (addr);
     }
-
     return rn;
 }
 
@@ -122,10 +119,11 @@ apteryx_to_neighbor (const char *path, const char *lladdr)
 static bool
 apteryx_static_neighbors_cb (const char *path, const char *value)
 {
-    struct rtnl_neigh *rn = apteryx_to_neighbor (path, value);
+    struct rtnl_neigh *rn;
     int err;
 
     /* Parse family, ip and interface from path */
+    rn = apteryx_to_neighbor (path, value);
     if (!rn)
     {
         /* Not (currently) valid for some reason */
@@ -184,14 +182,14 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
         new_obj = old_obj;
 
     /* Find all static IPv4 neighbors with this interface */
-    paths = apteryx_find (NEIGHBOR_PATH "/*/permanent/*/"
-            NEIGHBOR_IPV4_PERMANENT_INTERFACE, rtnl_link_get_name (link));
+    path = g_strdup_printf (INTERFACES_PATH"/%s/"INTERFACES_IPV4_NEIGHBOR,
+            rtnl_link_get_name (link));
+    paths = apteryx_search (path);
+    g_free (path);
     for (iter = g_list_first (paths); iter; iter = g_list_next (iter))
     {
         /* Add this neighbor */
-        path = ((char *)iter->data);
-        path[strlen (path) - strlen (NEIGHBOR_IPV4_PERMANENT_INTERFACE) - 1] = '\0';
-        apteryx_rewatch_tree (path, apteryx_static_neighbors_cb);
+        apteryx_rewatch_tree ((char *)iter->data, apteryx_static_neighbors_cb);
     }
     g_list_free_full (paths, free);
 }
@@ -229,14 +227,16 @@ static_neighbor_start ()
     DEBUG ("STATIC-NEIGHBOR: Starting\n");
 
     /* Setup Apteryx */
-    apteryx_watch (NEIGHBOR_IPV4_PERMANENT_PATH "/*/"
-                   NEIGHBOR_IPV4_PERMANENT_PHYS_ADDRESS, apteryx_static_neighbors_cb);
-    apteryx_watch (NEIGHBOR_IPV6_PERMANENT_PATH "/*/"
-                   NEIGHBOR_IPV4_PERMANENT_PHYS_ADDRESS, apteryx_static_neighbors_cb);
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+            apteryx_static_neighbors_cb);
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+            apteryx_static_neighbors_cb);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (NEIGHBOR_IPV4_PERMANENT_PATH, apteryx_static_neighbors_cb);
-    apteryx_rewatch_tree (NEIGHBOR_IPV6_PERMANENT_PATH, apteryx_static_neighbors_cb);
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+            apteryx_static_neighbors_cb);
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+            apteryx_static_neighbors_cb);
 
     return true;
 }
@@ -250,10 +250,10 @@ static_neighbor_exit ()
     DEBUG ("STATIC-NEIGHBOR: Exiting\n");
 
     /* Unconfigure Apteryx */
-    apteryx_unwatch (NEIGHBOR_IPV4_PERMANENT_PATH "/*/"
-                     NEIGHBOR_IPV4_PERMANENT_PHYS_ADDRESS, apteryx_static_neighbors_cb);
-    apteryx_unwatch (NEIGHBOR_IPV6_PERMANENT_PATH "/*/"
-                     NEIGHBOR_IPV4_PERMANENT_PHYS_ADDRESS, apteryx_static_neighbors_cb);
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+            apteryx_static_neighbors_cb);
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+            apteryx_static_neighbors_cb);
 
     /* Remove Netlink interface */
     if (sock)

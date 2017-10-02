@@ -103,7 +103,7 @@ function generate_header(xml,filename)
  */
 #ifndef __%s_APTERYX_SCHEMA_H__
 #define __%s_APTERYX_SCHEMA_H__
-]], module:upper(),module:upper()))
+]], module:upper():gsub('-','_'),module:upper():gsub('-','_')))
 end
 
 function generate_defines(tbl, path, depth)
@@ -168,7 +168,7 @@ function generate_footer(filename)
     print(string.format([[
 
 #endif /*__%s_APTERYX_SCHEMA_H__*/
-]], module:upper()))
+]], module:upper():gsub('-','_')))
 end
 
 if arg[1] == nil then

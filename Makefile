@@ -94,10 +94,9 @@ API_XML += interface/interface.xml
 TEST_SOURCE += interface/test_ifconfig.c interface/test_ifstatus.c
 SOURCE += iprouting/rib.c iprouting/fib.c
 API_XML += iprouting/iprouting.xml
-SOURCE += neighbor/settings.c neighbor/static.c neighbor/cache.c
+SOURCE += neighbor/settings.c
 API_XML += neighbor/neighbor.xml
 TEST_SOURCE += neighbor/test_settings.c
-TEST_SOURCE += neighbor/test_static.c
 SOURCE += icmp/icmp.c
 API_XML += icmp/icmp.xml
 TEST_SOURCE += icmp/test_icmp.c
@@ -107,7 +106,9 @@ TEST_SOURCE += tcp/test_tcp.c
 SOURCE += entity/entity.c
 API_XML += entity/entity.xml
 TEST_SOURCE += entity/test_entity.c
+SOURCE += ip/neighbor-cache.c ip/neighbor-static.c
 API_XML += ip/ietf-ip.xml
+TEST_SOURCE += ip/test_neighbor_cache.c ip/test_neighbor_static.c
 
 OBJS=$(SOURCE:%.c=%.o)
 INCLUDES=$(API_XML:%.xml=%.h)

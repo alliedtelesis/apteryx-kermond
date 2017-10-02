@@ -80,6 +80,25 @@
 		</xsl:for-each>
 	</xsl:template>
 
+	<xsl:template match="*[name()='type' and preceding::*[name() = 'typedef']/@name = @name]">
+		<xsl:variable name="type" select="@name" />
+		<xsl:for-each select="preceding::*[name() = 'typedef' and @name = $type]/*[@name='enumeration']/child::*">
+			<xsl:if test="name() = 'enum'">
+				<VALUE>
+				<xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
+				<xsl:attribute name="value"><xsl:value-of select="@name"/></xsl:attribute>
+				<xsl:if test="name(child::*) = 'description'">
+					<xsl:attribute name="help"><xsl:value-of select="."/></xsl:attribute>
+				</xsl:if>
+				</VALUE>
+			</xsl:if>
+		</xsl:for-each>
+	</xsl:template>
+
+	<xsl:template match="*[name()='type' and @name = 'empty']">
+		<VALUE name="TRUE" value="true"></VALUE>
+	</xsl:template>
+
 	<xsl:template match="node()|@*">
 		<xsl:apply-templates select="node()|@*"/>
 	</xsl:template>
