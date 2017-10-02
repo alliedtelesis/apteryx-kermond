@@ -106,9 +106,16 @@ TEST_SOURCE += tcp/test_tcp.c
 SOURCE += entity/entity.c
 API_XML += entity/entity.xml
 TEST_SOURCE += entity/test_entity.c
-SOURCE += ip/neighbor-cache.c ip/neighbor-static.c
+
 API_XML += ip/ietf-ip.xml
-TEST_SOURCE += ip/test_neighbor_cache.c ip/test_neighbor_static.c
+SOURCE += ip/address-cache.c
+SOURCE += ip/address-static.c
+SOURCE += ip/neighbor-cache.c
+SOURCE += ip/neighbor-static.c
+TEST_SOURCE += ip/test_address_cache.c
+TEST_SOURCE += ip/test_address_static.c
+TEST_SOURCE += ip/test_neighbor_cache.c
+TEST_SOURCE += ip/test_neighbor_static.c
 
 OBJS=$(SOURCE:%.c=%.o)
 INCLUDES=$(API_XML:%.xml=%.h)

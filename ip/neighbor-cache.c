@@ -174,12 +174,10 @@ nl_neighbor_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj
     if (action == NL_ACT_DEL)
     {
         char dst[INET6_ADDRSTRLEN + 5];
-        char lladdr[INET6_ADDRSTRLEN + 5];
         char ifname[IFNAMSIZ];
         char *path;
 
         /* Parse addresses */
-        nl_addr2str (rtnl_neigh_get_lladdr (rn), lladdr, sizeof (lladdr));
         nl_addr2str (rtnl_neigh_get_dst (rn), dst, sizeof (dst));
         if (link_cache)
             rtnl_link_i2name (link_cache, rtnl_neigh_get_ifindex (rn), ifname, sizeof (ifname));
@@ -187,12 +185,12 @@ nl_neighbor_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj
             if_indextoname (rtnl_neigh_get_ifindex (rn), ifname);
 
         /* Generate path */
-        path = g_strdup_printf (INTERFACES_STATE_PATH"/%s/%s/%s_%s",
+        path = g_strdup_printf (INTERFACES_STATE_PATH"/%s/%s/%s",
                         ifname,
                         rtnl_neigh_get_family (rn) == AF_INET ?
                                 INTERFACES_STATE_IPV4_NEIGHBOR :
                                 INTERFACES_STATE_IPV6_NEIGHBOR,
-                        dst, lladdr);
+                        dst);
 
         apteryx_prune (path);
         free (path);

@@ -1,6 +1,6 @@
 /**
- * @file test_neighbor_cache.c
- * Unit tests for IP neighbor cache
+ * @file test_address_cache.c
+ * Unit tests for IP address cache
  *
  * Copyright 2017, Allied Telesis Labs New Zealand, Ltd
  *
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library. If not, see <http://www.gnu.org/licenses/>
  */
-#include "neighbor-cache.c"
+#include "address-cache.c"
 
 #include <np.h>
 
@@ -25,10 +25,9 @@
 #define IFINDEX     "99"
 #define IFPATH      INTERFACES_STATE_PATH"/"IFNAME
 #define ADDRV4      "192.168.1.1"
-#define ADDRV6      "fc00::1"
-#define LLADDR      "00:11:22:33:44:55"
-#define IPV4PATH    IFPATH"/"INTERFACES_STATE_IPV4_NEIGHBOR"/"ADDRV4
-#define IPV6PATH    IFPATH"/"INTERFACES_STATE_IPV6_NEIGHBOR"/"ADDRV6
+#define ADDRV6      "fc00::2"
+#define IPV4PATH    IFPATH"/"INTERFACES_STATE_IPV4_ADDRESS"/"ADDRV4
+#define IPV6PATH    IFPATH"/"INTERFACES_STATE_IPV6_ADDRESS"/"ADDRV6
 
 static char *
 mock_if_indextoname (unsigned int ifindex, char *ifname)
@@ -95,29 +94,20 @@ check_tree_parameter (GNode *tree, char *path, char *parameter, char *value)
 }
 
 static struct nl_object *
-make_neighbor (int family, char *dst, char *lladdr)
+make_address (int family, char *ip, int prefixlen)
 {
-    struct rtnl_neigh *rn = rtnl_neigh_alloc ();
-    rtnl_neigh_set_ifindex (rn, atoi (IFINDEX));
-    rtnl_neigh_set_family (rn, family);
-    if (dst)
+    struct rtnl_addr *ra = rtnl_addr_alloc ();
+    rtnl_addr_set_family (ra, family);
+    if (ip)
     {
         struct nl_addr *addr;
-        nl_addr_parse (dst, family, &addr);
+        nl_addr_parse (ip, family, &addr);
         NP_ASSERT_NOT_NULL (addr);
-        rtnl_neigh_set_dst (rn, addr);
+        rtnl_addr_set_local (ra, addr);
         nl_addr_put (addr);
     }
-    if (lladdr)
-    {
-        struct nl_addr *addr;
-        nl_addr_parse (lladdr, AF_LLC, &addr);
-        NP_ASSERT_NOT_NULL (addr);
-        rtnl_neigh_set_lladdr (rn, addr);
-        nl_addr_put (addr);
-    }
-    rtnl_neigh_set_state (rn, NUD_REACHABLE);
-    return (struct nl_object *) rn;
+    rtnl_addr_set_prefixlen (ra, prefixlen);
+    return (struct nl_object *) ra;
 }
 
 static void
@@ -135,80 +125,77 @@ setup_test (char *ignore)
         np_syslog_ignore (ignore);
 }
 
-void test_neighbor_invalid ()
+void test_address_invalid ()
 {
-    setup_test ("invalid neighbor cb action");
-    struct nl_object *neigh = make_neighbor (0, NULL, NULL);
-    nl_neighbor_cb (-1, NULL, neigh);
-    nl_object_put (neigh);
+    setup_test ("invalid address cb action");
+    struct nl_object *addr = make_address (0, NULL, 0);
+    nl_address_cb (-1, NULL, addr);
+    nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
 }
 
-void test_neighbor_null ()
+void test_address_null ()
 {
-    setup_test ("missing neighbor object");
-    nl_neighbor_cb (NL_ACT_NEW, NULL, NULL);
+    setup_test ("missing address object");
+    nl_address_cb (NL_ACT_NEW, NULL, NULL);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
 }
 
-void test_neighbor_incomplete ()
+void test_address_incomplete ()
 {
-    setup_test ("invalid neighbor family");
-    struct nl_object *neigh = make_neighbor (0, NULL, NULL);
-    nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
-    nl_object_put (neigh);
+    setup_test ("invalid address family");
+    struct nl_object *addr = make_address (0, NULL, 0);
+    nl_address_cb (NL_ACT_NEW, NULL, addr);
+    nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
 }
 
-void test_neighbor_ipv4 ()
+void test_address_ipv4 ()
 {
     setup_test (NULL);
-    struct nl_object *neigh = make_neighbor (AF_INET, ADDRV4, LLADDR);
-    nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
-    nl_object_put (neigh);
+    struct nl_object *addr = make_address (AF_INET, ADDRV4, 24);
+    nl_address_cb (NL_ACT_NEW, NULL, addr);
+    nl_object_put (addr);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
-            INTERFACES_STATE_IPV4_NEIGHBOR_IP, ADDRV4));
+            INTERFACES_STATE_IPV4_ADDRESS_IP, ADDRV4));
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
-            INTERFACES_STATE_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
+            INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH, "24"));
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
-            INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN,
-            INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN_DYNAMIC));
+            INTERFACES_STATE_IPV4_ADDRESS_ORIGIN,
+            INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_STATIC));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
 }
 
-void test_neighbor_ipv6 ()
+void test_address_ipv6 ()
 {
     setup_test (NULL);
-    struct nl_object *neigh = make_neighbor (AF_INET6, ADDRV6, LLADDR);
-    nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
-    nl_object_put (neigh);
+    struct nl_object *addr = make_address (AF_INET6, ADDRV6, 64);
+    nl_address_cb (NL_ACT_NEW, NULL, addr);
+    nl_object_put (addr);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
-            INTERFACES_STATE_IPV6_NEIGHBOR_IP, ADDRV6));
+            INTERFACES_STATE_IPV6_ADDRESS_IP, ADDRV6));
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
-            INTERFACES_STATE_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
+            INTERFACES_STATE_IPV6_ADDRESS_PREFIX_LENGTH, "64"));
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
-            INTERFACES_STATE_IPV6_NEIGHBOR_ORIGIN,
-            INTERFACES_STATE_IPV6_NEIGHBOR_ORIGIN_DYNAMIC));
+            INTERFACES_STATE_IPV6_ADDRESS_ORIGIN,
+            INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_STATIC));
     NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
-            INTERFACES_STATE_IPV6_NEIGHBOR_IS_ROUTER,
-            NULL));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
-            INTERFACES_STATE_IPV6_NEIGHBOR_STATE,
-            INTERFACES_STATE_IPV6_NEIGHBOR_STATE_REACHABLE));
+            INTERFACES_STATE_IPV6_ADDRESS_STATUS,
+            INTERFACES_STATE_IPV6_ADDRESS_STATUS_PREFERRED));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);

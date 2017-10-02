@@ -64,7 +64,8 @@ mock_apteryx_search (const char *path)
 }
 
 static GNode *apteryx_tree;
-GNode *mock_apteryx_get_tree (const char *path)
+static GNode *
+mock_apteryx_get_tree (const char *path)
 {
     GNode *tree = apteryx_tree;
     NP_ASSERT_NOT_NULL (tree);
@@ -140,7 +141,7 @@ void test_static_neighbor4_ip_invalid ()
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_NEIGHBOR"/999.1_/"
-            INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, "1"));
+            INTERFACES_IPV4_NEIGHBOR_IP, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
 }
@@ -233,7 +234,7 @@ void test_static_neighbor6_ip_invalid ()
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_NEIGHBOR"/999.1_/"
-            INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, "1"));
+            INTERFACES_IPV6_NEIGHBOR_IP, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
 }
