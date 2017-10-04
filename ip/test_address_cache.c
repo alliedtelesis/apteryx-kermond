@@ -76,17 +76,30 @@ mock_apteryx_prune_path (const char *path)
 static GNode*
 apteryx_get_node (GNode *tree, char *path)
 {
-    if (strcmp (path, APTERYX_NAME (tree)) == 0)
-        return tree;
-    return NULL;
+    if (!tree || !path)
+        return NULL;
+    char *npath = apteryx_node_path (tree);
+    if (!npath || strcmp (npath, path) != 0)
+    {
+        GNode *node = g_node_first_child (tree);
+        tree = NULL;
+        while (node && !tree)
+        {
+            tree = apteryx_get_node (node, path);
+            node = g_node_next_sibling (node);
+        }
+    }
+    free (npath);
+    return tree;
 }
 
 static bool
-check_tree_parameter (GNode *tree, char *path, char *parameter, char *value)
+check_tree_parameter (GNode *tree, char *path, char *value)
 {
     GNode *node = apteryx_get_node (tree, path);
-    node = apteryx_find_child (node, parameter);
     if (!value && node)
+        return false;
+    if (value && !node)
         return false;
     if (value && node && strcmp (APTERYX_VALUE (node), value) != 0)
         return false;
@@ -103,10 +116,10 @@ make_address (int family, char *ip, int prefixlen)
         struct nl_addr *addr;
         nl_addr_parse (ip, family, &addr);
         NP_ASSERT_NOT_NULL (addr);
+        nl_addr_set_prefixlen (addr, prefixlen);
         rtnl_addr_set_local (ra, addr);
         nl_addr_put (addr);
     }
-    rtnl_addr_set_prefixlen (ra, prefixlen);
     return (struct nl_object *) ra;
 }
 
@@ -166,13 +179,13 @@ void test_address_ipv4 ()
     nl_address_cb (NL_ACT_NEW, NULL, addr);
     nl_object_put (addr);
     NP_ASSERT_NOT_NULL (apteryx_tree);
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH"/"
             INTERFACES_STATE_IPV4_ADDRESS_IP, ADDRV4));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
-            INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH, "24"));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH,
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH"/"
+            INTERFACES_STATE_IPV4_ADDRESS_SUBNET_PREFIX_LENGTH, "24"));
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV4PATH"/"
             INTERFACES_STATE_IPV4_ADDRESS_ORIGIN,
-            INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_STATIC));
+            INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN_OTHER));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
@@ -186,16 +199,16 @@ void test_address_ipv6 ()
     nl_address_cb (NL_ACT_NEW, NULL, addr);
     nl_object_put (addr);
     NP_ASSERT_NOT_NULL (apteryx_tree);
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH"/"
             INTERFACES_STATE_IPV6_ADDRESS_IP, ADDRV6));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH"/"
             INTERFACES_STATE_IPV6_ADDRESS_PREFIX_LENGTH, "64"));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH"/"
             INTERFACES_STATE_IPV6_ADDRESS_ORIGIN,
-            INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_STATIC));
-    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH,
+            INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_OTHER));
+    NP_ASSERT (check_tree_parameter (apteryx_tree, IPV6PATH"/"
             INTERFACES_STATE_IPV6_ADDRESS_STATUS,
-            INTERFACES_STATE_IPV6_ADDRESS_STATUS_PREFERRED));
+            INTERFACES_STATE_IPV6_ADDRESS_STATUS_UNKNOWN));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);

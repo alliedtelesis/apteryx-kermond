@@ -20,6 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
+#include <arpa/inet.h>
 #include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
@@ -41,9 +42,11 @@ address_to_apteryx (struct rtnl_addr *ra)
     char ifname[IFNAMSIZ] = {};
     int prefixlen;
     GNode *root;
+    GNode *node;
 
     /* Parse */
-    nl_addr2str (rtnl_addr_get_local (ra), ip, sizeof (ip));
+    inet_ntop (rtnl_addr_get_family (ra),
+            nl_addr_get_binary_addr (rtnl_addr_get_local (ra)), ip, sizeof (ip));
     if (link_cache)
         rtnl_link_i2name (link_cache, rtnl_addr_get_ifindex (ra), ifname, sizeof (ifname));
     else
@@ -61,7 +64,8 @@ address_to_apteryx (struct rtnl_addr *ra)
     if (rtnl_addr_get_family (ra) == AF_INET)
     {
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_IP), strdup (ip));
-        APTERYX_LEAF_INT (root, INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH, prefixlen);
+        node = APTERYX_NODE (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_SUBNET));
+        APTERYX_LEAF_INT (node, "prefix-length", prefixlen);
         APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN),
                             strdup (INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_OTHER));
     }

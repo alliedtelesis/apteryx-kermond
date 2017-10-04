@@ -131,7 +131,7 @@ void test_static_addr4_prefixlen_invalid ()
 {
     setup_test (true, "Unable to parse phys-address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
-            INTERFACES_STATE_IPV4_ADDRESS_PREFIX_LENGTH, "9999999"));
+            INTERFACES_STATE_IPV4_ADDRESS_SUBNET_PREFIX_LENGTH, "9999999"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
 }
