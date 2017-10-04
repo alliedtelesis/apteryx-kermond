@@ -2,6 +2,14 @@
 	<xsl:output omit-xml-declaration="yes" method="xml" encoding="UTF-8" indent="yes"/>
 	<xsl:strip-space elements="*"/>
 
+	<xsl:template match="*[name()='rpc']">
+		<!-- Ignore RPC -->
+	</xsl:template>
+
+	<xsl:template match="*[name()='grouping']">
+		<!-- Do not process these at the top level -->
+	</xsl:template>
+	
 	<xsl:template match="*[name()='module']">
 		<MODULE xmlns:apteryx="https://github.com/alliedtelesis/apteryx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="https://github.com/alliedtelesis/apteryx
@@ -26,27 +34,25 @@
 		</NODE>
 	</xsl:template>
 
-	<xsl:template match="*[name()='container' or name()='leaf' or name()='list']">
+	<xsl:template match="*[name()='container' or name()='leaf' or name()='list' or name()='leaf-list' or name()='choice' or name()='case']">
 		<NODE>
 		<xsl:attribute name="name"><xsl:value-of select="@name"/></xsl:attribute>
-		<xsl:for-each select="child::*">
-			<xsl:if test="name(parent::*) = 'leaf'">
-				<xsl:choose>
-					<xsl:when test="preceding::*[name() = 'config']/@value = 'false'">
-						<xsl:attribute name="mode">r</xsl:attribute>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:attribute name="mode">rw</xsl:attribute>
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:if>
-			<xsl:if test="name() = 'description'">
-				<xsl:attribute name="help"><xsl:value-of select="normalize-space(.)"/></xsl:attribute>
-			</xsl:if>
-			<xsl:if test="name() = 'default'">
-				<xsl:attribute name="default"><xsl:value-of select="@value"/></xsl:attribute>
-			</xsl:if>
-		</xsl:for-each>
+		<xsl:if test="name() = 'leaf'">
+			<xsl:choose>
+				<xsl:when test="preceding::*[name() = 'config']/@value = 'false'">
+					<xsl:attribute name="mode">r</xsl:attribute>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:attribute name="mode">rw</xsl:attribute>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:if>
+		<xsl:if test="child::*[name() = 'default']">
+			<xsl:attribute name="default"><xsl:value-of select="child::*[name() = 'default']/@value"/></xsl:attribute>
+		</xsl:if>
+		<xsl:if test="child::*[name() = 'description']">
+			<xsl:attribute name="help"><xsl:value-of select="normalize-space(child::*[name() = 'description']/.)"/></xsl:attribute>
+		</xsl:if>
 		<xsl:if test="name() = 'list'">
 			<NODE name="*">
 			<xsl:attribute name="help">
@@ -60,10 +66,41 @@
 			<xsl:apply-templates select="node()|@*"/>
 			</NODE>
 		</xsl:if>
+		<xsl:if test="name() = 'leaf-list'">
+			<NODE name="*">
+				<xsl:if test="child::*[name() = 'description']">
+					<xsl:attribute name="help"><xsl:value-of select="normalize-space(child::*[name() = 'description']/.)"/></xsl:attribute>
+				</xsl:if>
+			</NODE>
+		</xsl:if>
 		<xsl:if test="name() != 'list'">
 			<xsl:apply-templates select="node()|@*"/>
 		</xsl:if>
 		</NODE>
+	</xsl:template>
+
+	<xsl:template match="*[name()='uses']">
+		<xsl:if test="not(contains(@name, ':'))">
+			<xsl:variable name="grouping" select="@name" />
+			<xsl:for-each select="preceding::*[name() = 'grouping' and @name = $grouping]">
+				<xsl:if test="child::*[name() = 'description']">
+					<xsl:attribute name="help"><xsl:value-of select="normalize-space(child::*[name() = 'description']/.)"/></xsl:attribute>
+				</xsl:if>
+				<xsl:apply-templates select="node()|@*"/>
+			</xsl:for-each>
+		</xsl:if>
+		<xsl:if test="contains(@name, ':')">
+			<xsl:variable name="grouping" select="substring-after(@name,':')"/>
+			<xsl:variable name="prefix" select="substring-before(@name ,':')"/>
+			<xsl:variable name="model" select="preceding::*[name() = 'import' and child::*/@value = $prefix]/@module"/>
+			<xsl:variable name="file" select="concat($model,'.yin')"/>
+			<xsl:for-each select="document($file)/*[name() = 'module']/*[name() = 'grouping' and @name = $grouping]">
+				<xsl:if test="child::*[name() = 'description']">
+					<xsl:attribute name="help"><xsl:value-of select="normalize-space(child::*[name() = 'description']/.)"/></xsl:attribute>
+				</xsl:if>
+				<xsl:apply-templates select="node()|@*"/>
+			</xsl:for-each>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="*[name(parent::*) = 'leaf' and name()='type' and @name='enumeration']">
