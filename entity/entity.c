@@ -76,7 +76,7 @@ dynamic_enitity_add_del_address (struct nl_object *obj, void *arg)
     nl_addr2str (addr, addr_str, sizeof (addr_str));
     prefix_len = nl_addr_get_prefixlen (addr);
 
-    DEBUG ("ENTITY: %s %s %s %s", info->deleted ? "removing" : "adding", addr_str,
+    VERBOSE ("ENTITY: %s %s %s %s", info->deleted ? "removing" : "adding", addr_str,
             info->deleted ? "from" : "to", info->entity);
 
     /* Update Apteryx */
@@ -265,7 +265,7 @@ watch_entities (const char *path, const char *value)
             "/ipv%d/interfaces/%64s",
             zone, network, host, &family, ifname) == 5)
     {
-        DEBUG ("ENTITY: Dynamic ipv%d host: \"%s.%s.%s\" interface \"%s\"\n",
+        VERBOSE ("ENTITY: Dynamic ipv%d host: \"%s.%s.%s\" interface \"%s\"\n",
                 family, zone, network, host, ifname);
         if (value && strcmp (ifname, value) != 0)
         {

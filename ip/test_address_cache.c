@@ -19,59 +19,11 @@
  */
 #include "address-cache.c"
 
-#include <np.h>
+#include "test.h"
 
-#define IFNAME      "eth1"
-#define IFINDEX     "99"
 #define IFPATH      INTERFACES_STATE_PATH"/"IFNAME
-#define ADDRV4      "192.168.1.1"
-#define ADDRV6      "fc00::2"
 #define IPV4PATH    IFPATH"/"INTERFACES_STATE_IPV4_ADDRESS"/"ADDRV4
 #define IPV6PATH    IFPATH"/"INTERFACES_STATE_IPV6_ADDRESS"/"ADDRV6
-
-static char *
-mock_if_indextoname (unsigned int ifindex, char *ifname)
-{
-    strcpy (ifname, IFNAME);
-    return ifname;
-}
-
-static gpointer
-apteryx_node_copy_fn (gconstpointer src, gpointer data)
-{
-    return (gpointer) g_strdup ((const gchar *) src);
-}
-
-static GNode *apteryx_tree;
-static bool
-mock_apteryx_set_tree_full (GNode *root, uint64_t ts, bool wait_for_completion)
-{
-    NP_ASSERT_NULL (apteryx_tree);
-    apteryx_tree = g_node_copy_deep (root, apteryx_node_copy_fn, NULL);
-    return true;
-}
-
-static char *apteryx_path;
-static char *apteryx_value;
-static bool
-mock_apteryx_set_full (const char *path, const char *value, uint64_t ts,
-                       bool wait_for_completion)
-{
-    NP_ASSERT_NULL (apteryx_path);
-    NP_ASSERT_NULL (apteryx_value);
-    apteryx_path = g_strdup (path);
-    apteryx_value = g_strdup (value);
-    return true;
-}
-
-static char *apteryx_prune_path;
-static bool
-mock_apteryx_prune_path (const char *path)
-{
-    NP_ASSERT_NULL (apteryx_prune_path);
-    apteryx_prune_path = g_strdup (path);
-    return true;
-}
 
 static GNode*
 apteryx_get_node (GNode *tree, char *path)
@@ -130,6 +82,7 @@ setup_test (char *ignore)
     np_mock (apteryx_set_tree_full, mock_apteryx_set_tree_full);
     np_mock (apteryx_set_full, mock_apteryx_set_full);
     np_mock (apteryx_prune, mock_apteryx_prune_path);
+    link_active = true;
     apteryx_tree = NULL;
     apteryx_path = NULL;
     apteryx_value = NULL;
@@ -140,6 +93,7 @@ setup_test (char *ignore)
 
 void test_address_invalid ()
 {
+    NP_TEST_START
     setup_test ("invalid address cb action");
     struct nl_object *addr = make_address (0, NULL, 0);
     nl_address_cb (-1, NULL, addr);
@@ -148,20 +102,24 @@ void test_address_invalid ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("ADDRESS-CACHE: invalid address cb action:-1\n")
 }
 
 void test_address_null ()
 {
+    NP_TEST_START
     setup_test ("missing address object");
     nl_address_cb (NL_ACT_NEW, NULL, NULL);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("ADDRESS-CACHE: missing address object\n")
 }
 
 void test_address_incomplete ()
 {
+    NP_TEST_START
     setup_test ("invalid address family");
     struct nl_object *addr = make_address (0, NULL, 0);
     nl_address_cb (NL_ACT_NEW, NULL, addr);
@@ -170,10 +128,12 @@ void test_address_incomplete ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("ADDRESS-CACHE: invalid address family:0\n")
 }
 
 void test_address_ipv4 ()
 {
+    NP_TEST_START
     setup_test (NULL);
     struct nl_object *addr = make_address (AF_INET, ADDRV4, 24);
     nl_address_cb (NL_ACT_NEW, NULL, addr);
@@ -190,10 +150,12 @@ void test_address_ipv4 ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("")
 }
 
 void test_address_ipv6 ()
 {
+    NP_TEST_START
     setup_test (NULL);
     struct nl_object *addr = make_address (AF_INET6, ADDRV6, 64);
     nl_address_cb (NL_ACT_NEW, NULL, addr);
@@ -213,4 +175,5 @@ void test_address_ipv6 ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("")
 }

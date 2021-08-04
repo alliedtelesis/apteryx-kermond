@@ -19,6 +19,7 @@
  */
 #ifndef _KERMOND_H_
 #define _KERMOND_H_
+#define _GNU_SOURCE
 #include <assert.h>
 #include <stdbool.h>
 #include <inttypes.h>

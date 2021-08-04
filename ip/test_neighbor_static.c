@@ -19,59 +19,10 @@
  */
 #include "neighbor-static.c"
 
-#include <np.h>
+#include "test.h"
 
-#define IFNAME      "eth1"
-#define LLADDR      "00:11:22:33:44:55"
-#define ADDRV4      "192.168.1.1"
-#define ADDRV6      "fc00::2"
 #define PATHV4      INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_NEIGHBOR"/"ADDRV4"/"
 #define PATHV6      INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_NEIGHBOR"/"ADDRV6"/"
-
-static bool link_active;
-static unsigned int
-mock_if_nametoindex(const char *ifname)
-{
-    return link_active ? 1 : 0;
-}
-
-static struct rtnl_neigh *neighbor_added = NULL;
-static int
-mock_rtnl_neigh_add(struct nl_sock *sk, struct rtnl_neigh *tmpl, int flags)
-{
-    NP_ASSERT_NULL (neighbor_added);
-    neighbor_added = (struct rtnl_neigh *) nl_object_clone ((struct nl_object *) tmpl);
-    return 0;
-}
-
-static struct rtnl_neigh *neighbor_deleted = NULL;
-static int
-mock_rtnl_neigh_delete(struct nl_sock *sk, struct rtnl_neigh *tmpl, int flags)
-{
-    NP_ASSERT_NULL (neighbor_deleted);
-    neighbor_deleted = (struct rtnl_neigh *) nl_object_clone ((struct nl_object *) tmpl);
-    return 0;
-}
-
-static GList *search_result = NULL;
-static GList *
-mock_apteryx_search (const char *path)
-{
-    GList *result = search_result;
-    NP_ASSERT_NOT_NULL (result);
-    search_result = NULL;
-    return result;
-}
-
-static GNode *apteryx_tree;
-static GNode *
-mock_apteryx_get_tree (const char *path)
-{
-    GNode *tree = apteryx_tree;
-    NP_ASSERT_NOT_NULL (tree);
-    apteryx_tree = NULL;
-    return tree;
-}
 
 static void
 assert_neigh_valid (struct rtnl_neigh *n, int family, bool check_lladdr)
@@ -81,7 +32,7 @@ assert_neigh_valid (struct rtnl_neigh *n, int family, bool check_lladdr)
 
     NP_ASSERT_EQUAL (rtnl_neigh_get_family (n), family);
     NP_ASSERT_EQUAL (rtnl_neigh_get_state (n), NUD_PERMANENT);
-    NP_ASSERT_EQUAL (rtnl_neigh_get_ifindex (n), 1);
+    NP_ASSERT_EQUAL (rtnl_neigh_get_ifindex (n), IFINDEX);
     addr = rtnl_neigh_get_dst (n);
     if (family == AF_INET)
         NP_ASSERT_STR_EQUAL (nl_addr2str (addr, buf, sizeof(buf)), ADDRV4);
@@ -113,60 +64,73 @@ setup_test (bool active, char *ignore)
 
 void test_static_neighbor4_path_null ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static neighbor");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (NULL, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Invalid static neighbor: (null) = 1\n")
 }
 
 void test_static_neighbor4_path_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static neighbor");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4 "dog", "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor4_lladdr_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse phys-address");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4
             INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Unable to parse phys-address: Invalid address for specified address family\n")
 }
 
 void test_static_neighbor4_ip_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_NEIGHBOR"/999.1_/"
             INTERFACES_IPV4_NEIGHBOR_IP, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor4_add_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4
             INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_neighbor4_add()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4
             INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
     NP_ASSERT_NOT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_added, AF_INET, true);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor4_add_interface_go_active ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     search_result = g_list_append (search_result,
             strdup (INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_NEIGHBOR"/"ADDRV4));
@@ -181,85 +145,103 @@ void test_static_neighbor4_add_interface_go_active ()
     NP_ASSERT_NOT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_added, AF_INET, true);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor4_delete_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4
             INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, NULL));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_neighbor4_delete ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV4
             INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS, NULL));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NOT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_deleted, AF_INET, false);
+    NP_TEST_END ("")
 }
 
 /* IPv6 Static Neighbors */
 
 void test_static_neighbor6_path_null ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static neighbor");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (NULL, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Invalid static neighbor: (null) = 1\n")
 }
 
 void test_static_neighbor6_path_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unexpected static neighbor parameter");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6 "dog", "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor6_lladdr_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse phys-address");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6
             INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Unable to parse phys-address: Invalid address for specified address family\n")
 }
 
 void test_static_neighbor6_ip_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_NEIGHBOR"/999.1_/"
             INTERFACES_IPV6_NEIGHBOR_IP, "1"));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor6_add_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6
             INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_neighbor6_add ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6
             INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, LLADDR));
     NP_ASSERT_NOT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_added, AF_INET6, true);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor6_add_interface_go_active ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     search_result = g_list_append (search_result,
             strdup (INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_NEIGHBOR"/"ADDRV6));
@@ -274,23 +256,28 @@ void test_static_neighbor6_add_interface_go_active ()
     NP_ASSERT_NOT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_added, AF_INET6, true);
+    NP_TEST_END ("")
 }
 
 void test_static_neighbor6_delete_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6
             INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, NULL));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NULL (neighbor_deleted);
+    NP_TEST_END ("NEIGHBOR: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_neighbor6_delete ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_neighbors_cb (PATHV6
             INTERFACES_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS, NULL));
     NP_ASSERT_NULL (neighbor_added);
     NP_ASSERT_NOT_NULL (neighbor_deleted);
     assert_neigh_valid (neighbor_deleted, AF_INET6, false);
+    NP_TEST_END ("")
 }

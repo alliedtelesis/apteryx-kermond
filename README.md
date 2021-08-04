@@ -4,7 +4,7 @@ An Apteryx abstraction for the Linux kernel networking stack
 
 ## Requires
 ```
-apteryx apteryx-xml glib-2.0 libnl-3.0 libnl-route-3.0 novaprova
+apteryx apteryx-xml glib-2.0 libnl-3.0 libnl-route-3.0
 ```
 
 ## Building
@@ -41,10 +41,8 @@ apteryx -g /interface/interfaces/eth1/status/oper-status
 6
 ```
 
-## Unit tests (using novaprova)
+## Unit tests (using g_test)
 ```
 make test
-make test VALGRIND=no
-make test interface
-make test interface.test_ifconfig.ifconfig_admin_up
+google-chrome gcov/index.html
 ```

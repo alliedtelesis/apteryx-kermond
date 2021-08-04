@@ -30,13 +30,11 @@ static unsigned int
 if_speed_get (char *name)
 {
     uint32_t speed = 0;
-    char *file_name = NULL;
+    char *file_name;
 
-    if (asprintf (&file_name, "/sys/class/net/%s/speed", name) > 0)
-    {
-        speed = procfs_read_uint32 (file_name);
-        free (file_name);
-    }
+    file_name = g_strdup_printf ("/sys/class/net/%s/speed", name);
+    speed = procfs_read_uint32 (file_name);
+    free (file_name);
     if ((int) speed == -1)
     {
         speed = 0;
@@ -55,19 +53,17 @@ if_duplex_get (char *name)
     unsigned int duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_AUTO;
     char *file_name = NULL;
 
-    if (asprintf (&file_name, "/sys/class/net/%s/duplex", name) > 0)
+    file_name = g_strdup_printf ("/sys/class/net/%s/duplex", name);
+    char *sduplex = procfs_read_string (file_name);
+    if (sduplex && strcmp (sduplex, "half") == 0)
     {
-        char *sduplex = procfs_read_string (file_name);
-        if (sduplex && strcmp (sduplex, "half") == 0)
-        {
-            duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_HALF;
-        }
-        else if (sduplex && strcmp (sduplex, "full") == 0)
-        {
-            duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_FULL;
-        }
-        free (file_name);
+        duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_HALF;
     }
+    else if (sduplex && strcmp (sduplex, "full") == 0)
+    {
+        duplex = INTERFACE_INTERFACES_STATUS_DUPLEX_FULL;
+    }
+    free (file_name);
     return duplex;
 }
 

@@ -18,74 +18,14 @@
  * along with this library. If not, see <http://www.gnu.org/licenses/>
  */
 #include "entity.c"
-
-#include <np.h>
+#include "test.h"
 
 // apteryx -s /entities/private/children/lan/children/server/dynamic/ipv4/interfaces/p5p1 p5p1
 #define ZONE    ENTITIES_PATH "/private"
 #define NETWORK ZONE "/" ENTITIES_CHILDREN "/lan"
 #define HOST    NETWORK "/" ENTITIES_CHILDREN_CHILDREN "/server"
-#define IFNAME  "eth99"
-#define IFINDEX 100
-#define IP4ADDR "192.168.1.1"
-#define IP6ADDR "fc00::1"
 #define DYNv4   HOST "/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC_IPV4_INTERFACES "/" IFNAME
 #define DYNv6   HOST "/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC_IPV6_INTERFACES "/" IFNAME
-
-static bool link_active;
-static unsigned int
-mock_if_nametoindex (const char *ifname)
-{
-    return link_active ? IFINDEX : 0;
-}
-
-static char *
-mock_if_indextoname (unsigned int ifindex, char *ifname)
-{
-    if (link_active)
-    {
-        strcpy (ifname, IFNAME);
-        return ifname;
-    }
-    else
-    {
-        return NULL;
-    }
-}
-
-static int addr_family;
-static void
-mock_nl_cache_foreach_filter (struct nl_cache *cache, struct nl_object *filter,
-        void (*cb)(struct nl_object *, void *), void *arg)
-{
-    struct nl_addr *a;
-    if (addr_family == AF_INET)
-        nl_addr_parse (IP4ADDR, addr_family, &a);
-    else if (addr_family == AF_INET6)
-        nl_addr_parse (IP6ADDR, addr_family, &a);
-    else
-        return;
-    struct rtnl_addr *addr = rtnl_addr_alloc ();
-    rtnl_addr_set_family (addr, addr_family);
-    rtnl_addr_set_ifindex (addr, IFINDEX);
-    rtnl_addr_set_local (addr, a);
-    cb ((struct nl_object *) addr, arg);
-    rtnl_addr_put (addr);
-    nl_addr_put (a);
-}
-
-static char *apteryx_path;
-static char *apteryx_value;
-static bool
-mock_apteryx_set_full (const char *path, const char *value, uint64_t ts,
-                       bool wait_for_completion)
-{
-    NP_ASSERT_NULL (apteryx_path);
-    NP_ASSERT_NULL (apteryx_value);
-    apteryx_path = g_strdup (path);
-    apteryx_value = g_strdup (value);
-    return true;
-}
 
 static struct nl_object *
 make_addr (int family, char *addr_str)
@@ -127,48 +67,61 @@ setup_test (bool active, int family, char *ignore)
 
 void test_entity_path_null ()
 {
+    NP_TEST_START
     setup_test (false, AF_INET, "Unexpected path");
     NP_ASSERT_FALSE (watch_entities (NULL, "5"));
+    NP_TEST_END ("ENTITY: Unexpected path: (null)\n");
 }
 
 void test_entity_invalid_path ()
 {
+    NP_TEST_START
     setup_test (false, AF_INET, "Unexpected path");
     NP_ASSERT_FALSE (watch_entities (ENTITIES_PATH, "5"));
+    NP_TEST_END ("ENTITY: Unexpected path: /entities\n");
 }
 
 void test_entity_dynamic_ipv4_inconsistent_ifname ()
 {
+    NP_TEST_START
     setup_test (false, AF_INET, "Inconsistent interface");
     NP_ASSERT_FALSE (watch_entities (DYNv4, "eth1"));
+    NP_TEST_END ("ENTITY: Inconsistent interface: eth1 != eth99\n");
 }
 
 void test_entity_new_dynamic_ipv4_no_interface ()
 {
+    NP_TEST_START
     setup_test (false, AF_INET, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv4, IFNAME));
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: No ifindex for \"eth99\"\n");
 }
 
 void test_entity_new_dynamic_ipv4_no_address ()
 {
+    NP_TEST_START
     setup_test (true, -1, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv4, IFNAME));
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }
 
 void test_entity_new_dynamic_ipv4 ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv4, IFNAME));
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP4ADDR "_32");
     NP_ASSERT_STR_EQUAL (apteryx_value, IP4ADDR "/32");
+    NP_TEST_END ("")
 }
 
 void test_entity_del_dynamic_ipv4 ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET, NULL);
     watch_entities (DYNv4, IFNAME);
     free (apteryx_path);
@@ -178,28 +131,34 @@ void test_entity_del_dynamic_ipv4 ()
     NP_ASSERT_TRUE (watch_entities (DYNv4, NULL));
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP4ADDR "_32");
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }
 
 void test_entity_action_invalid ()
 {
+    NP_TEST_START
     setup_test (true, -1, "invalid address cb action");
     struct nl_object *addr = make_addr (AF_INET, IP4ADDR);
     nl_addr_cb (-1, NULL, addr);
     nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: invalid address cb action:-1\n");
 }
 
 void test_entity_addr_null ()
 {
+    NP_TEST_START
     setup_test (true, -1, "missing address object");
     nl_addr_cb (NL_ACT_NEW, NULL, NULL);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: missing address object\n");
 }
 
 void test_entity_addr_no_family ()
 {
+    NP_TEST_START
     setup_test (true, -1, "invalid address object");
     struct nl_object *addr = make_addr (AF_INET, IP4ADDR);
     rtnl_addr_set_family ((struct rtnl_addr *) addr, -1);
@@ -207,10 +166,12 @@ void test_entity_addr_no_family ()
     nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: invalid address object\n");
 }
 
 void test_entity_addr_no_interface ()
 {
+    NP_TEST_START
     setup_test (true, -1, "invalid address object");
     struct nl_object *addr = make_addr (AF_INET, IP4ADDR);
     rtnl_addr_set_ifindex ((struct rtnl_addr *) addr, 0);
@@ -218,20 +179,24 @@ void test_entity_addr_no_interface ()
     nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: invalid address object\n");
 }
 
 void test_entity_addr_no_address ()
 {
+    NP_TEST_START
     setup_test (true, -1, "invalid address object");
     struct nl_object *addr = make_addr (AF_INET, NULL);
     nl_addr_cb (NL_ACT_NEW, NULL, addr);
     nl_object_put (addr);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: invalid address object\n");
 }
 
 void test_entity_dynamic_ipv4_new_address ()
 {
+    NP_TEST_START
     setup_test (true, -1, NULL);
     watch_entities (DYNv4, IFNAME);
     struct nl_object *addr = make_addr (AF_INET, IP4ADDR);
@@ -239,10 +204,12 @@ void test_entity_dynamic_ipv4_new_address ()
     nl_object_put (addr);
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP4ADDR "_32");
     NP_ASSERT_STR_EQUAL (apteryx_value, IP4ADDR "/32");
+    NP_TEST_END ("")
 }
 
 void test_entity_dynamic_ipv4_del_address ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET, NULL);
     watch_entities (DYNv4, IFNAME);
     free (apteryx_path);
@@ -254,34 +221,42 @@ void test_entity_dynamic_ipv4_del_address ()
     nl_object_put (addr);
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP4ADDR "_32");
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }
 
 void test_entity_new_dynamic_ipv6_no_interface ()
 {
+    NP_TEST_START
     setup_test (false, AF_INET6, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv6, IFNAME));
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("ENTITY: No ifindex for \"eth99\"\n");
 }
 
 void test_entity_new_dynamic_ipv6_no_address ()
 {
+    NP_TEST_START
     setup_test (true, -1, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv6, IFNAME));
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }
 
 void test_entity_new_dynamic_ipv6 ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET6, NULL);
     NP_ASSERT_TRUE (watch_entities (DYNv6, IFNAME));
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP6ADDR "_128");
     NP_ASSERT_STR_EQUAL (apteryx_value, IP6ADDR "/128");
+    NP_TEST_END ("")
 }
 
 void test_entity_del_dynamic_ipv6 ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET6, NULL);
     watch_entities (DYNv6, IFNAME);
     free (apteryx_path);
@@ -291,10 +266,12 @@ void test_entity_del_dynamic_ipv6 ()
     NP_ASSERT_TRUE (watch_entities (DYNv6, NULL));
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP6ADDR "_128");
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }
 
 void test_entity_dynamic_ipv6_new_address ()
 {
+    NP_TEST_START
     setup_test (true, -1, NULL);
     watch_entities (DYNv6, IFNAME);
     struct nl_object *addr = make_addr (AF_INET6, IP6ADDR);
@@ -302,10 +279,12 @@ void test_entity_dynamic_ipv6_new_address ()
     nl_object_put (addr);
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP6ADDR "_128");
     NP_ASSERT_STR_EQUAL (apteryx_value, IP6ADDR "/128");
+    NP_TEST_END ("")
 }
 
 void test_entity_dynamic_ipv6_del_address ()
 {
+    NP_TEST_START
     setup_test (true, AF_INET6, NULL);
     watch_entities (DYNv6, IFNAME);
     free (apteryx_path);
@@ -317,4 +296,5 @@ void test_entity_dynamic_ipv6_del_address ()
     nl_object_put (addr);
     NP_ASSERT_STR_EQUAL (apteryx_path, HOST "/subnets/dynamic_" IP6ADDR "_128");
     NP_ASSERT_NULL (apteryx_value);
+    NP_TEST_END ("")
 }

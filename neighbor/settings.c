@@ -23,7 +23,7 @@
 static bool
 system_call (char *cmd)
 {
-    DEBUG ("NEIGHBOR: %s\n", cmd);
+    VERBOSE ("NEIGHBOR: %s\n", cmd);
     if (system (cmd) != 0)
     {
         ERROR ("NEIGHBOR: Command failed (%s)\n", cmd);
@@ -39,7 +39,7 @@ watch_ipv4_settings (const char *path, const char *value)
     char ifname[64];
     char parameter[64];
 
-    DEBUG ("NEIGHBOR: %s = %s\n", path, value);
+    VERBOSE ("NEIGHBOR: %s = %s\n", path, value);
 
     /* Opportunistic Neighbor Discovery */
     if (path && strcmp (path, IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH) == 0)

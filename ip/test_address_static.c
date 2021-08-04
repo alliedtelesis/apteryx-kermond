@@ -19,59 +19,10 @@
  */
 #include "address-static.c"
 
-#include <np.h>
+#include "test.h"
 
-#define IFNAME      "eth1"
-#define LLADDR      "00:11:22:33:44:55"
-#define ADDRV4      "192.168.1.1"
-#define ADDRV6      "fc00::2"
 #define PATHV4      INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_ADDRESS"/"ADDRV4"/"
 #define PATHV6      INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_ADDRESS"/"ADDRV6"/"
-
-static bool link_active;
-static unsigned int
-mock_if_nametoindex(const char *ifname)
-{
-    return link_active ? 1 : 0;
-}
-
-static struct rtnl_addr *address_added = NULL;
-static int
-mock_rtnl_addr_add(struct nl_sock *sk, struct rtnl_addr *tmpl, int flags)
-{
-    NP_ASSERT_NULL (address_added);
-    address_added = (struct rtnl_addr *) nl_object_clone ((struct nl_object *) tmpl);
-    return 0;
-}
-
-static struct rtnl_addr *address_deleted = NULL;
-static int
-mock_rtnl_addr_delete(struct nl_sock *sk, struct rtnl_addr *tmpl, int flags)
-{
-    NP_ASSERT_NULL (address_deleted);
-    address_deleted = (struct rtnl_addr *) nl_object_clone ((struct nl_object *) tmpl);
-    return 0;
-}
-
-static GList *search_result = NULL;
-static GList *
-mock_apteryx_search (const char *path)
-{
-    GList *result = search_result;
-    NP_ASSERT_NOT_NULL (result);
-    search_result = NULL;
-    return result;
-}
-
-static GNode *apteryx_tree;
-static GNode *
-mock_apteryx_get_tree (const char *path)
-{
-    GNode *tree = apteryx_tree;
-    NP_ASSERT_NOT_NULL (tree);
-    apteryx_tree = NULL;
-    return tree;
-}
 
 static void
 assert_address_valid (struct rtnl_addr *n, int family)
@@ -103,60 +54,73 @@ setup_test (bool active, char *ignore)
 
 void test_static_addr4_path_null ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (NULL, "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Invalid static address: (null) = 1\n")
 }
 
 void test_static_addr4_path_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4 "dog", "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_addr4_ip_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_address_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_ADDRESS"/999.1_/"
             INTERFACES_STATE_IPV4_ADDRESS_IP, "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Unable to parse ip: Invalid address for specified address family\n")
 }
 
 void test_static_addr4_prefixlen_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse phys-address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
             INTERFACES_STATE_IPV4_ADDRESS_SUBNET_PREFIX_LENGTH, "9999999"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_addr4_add_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
             INTERFACES_STATE_IPV4_ADDRESS_IP, LLADDR));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_addr4_add()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
             INTERFACES_STATE_IPV4_ADDRESS_IP, LLADDR));
     NP_ASSERT_NOT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
     assert_address_valid (address_added, AF_INET);
+    NP_TEST_END ("")
 }
 
 void test_static_addr4_add_interface_go_active ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     search_result = g_list_append (search_result,
             strdup (INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV4_ADDRESS"/"ADDRV4));
@@ -171,83 +135,101 @@ void test_static_addr4_add_interface_go_active ()
     NP_ASSERT_NOT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
     assert_address_valid (address_added, AF_INET);
+    NP_TEST_END ("")
 }
 
 void test_static_addr4_delete_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
             INTERFACES_STATE_IPV4_ADDRESS_IP, NULL));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_addr4_delete ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV4
             INTERFACES_STATE_IPV4_ADDRESS_IP, NULL));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NOT_NULL (address_deleted);
     assert_address_valid (address_deleted, AF_INET);
+    NP_TEST_END ("")
 }
 
 void test_static_addr6_path_null ()
 {
+    NP_TEST_START
     setup_test (true, "Invalid static address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (NULL, "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Invalid static address: (null) = 1\n")
 }
 
 void test_static_addr6_path_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unexpected static address parameter");
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6 "dog", "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_addr6_ip_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse ip");
     NP_ASSERT_TRUE (apteryx_static_address_cb (
             INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_ADDRESS"/999.1_/"
             INTERFACES_IPV6_ADDRESS_IP, "1"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Unable to parse ip: Invalid address for specified address family\n")
 }
 
 void test_static_addr6_prefixlen_invalid ()
 {
+    NP_TEST_START
     setup_test (true, "Unable to parse phys-address");
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6
             INTERFACES_IPV6_ADDRESS_PREFIX_LENGTH, "9999999"));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("")
 }
 
 void test_static_addr6_add_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6
             INTERFACES_IPV6_ADDRESS_IP, ADDRV6));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_addr6_add ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6
             INTERFACES_IPV6_ADDRESS_IP, ADDRV6));
     NP_ASSERT_NOT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
     assert_address_valid (address_added, AF_INET6);
+    NP_TEST_END ("")
 }
 
 void test_static_addr6_add_interface_go_active ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     search_result = g_list_append (search_result,
             strdup (INTERFACES_PATH"/"IFNAME"/"INTERFACES_IPV6_ADDRESS"/"ADDRV6));
@@ -262,23 +244,28 @@ void test_static_addr6_add_interface_go_active ()
     NP_ASSERT_NOT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
     assert_address_valid (address_added, AF_INET6);
+    NP_TEST_END ("")
 }
 
 void test_static_addr6_delete_interface_inactive ()
 {
+    NP_TEST_START
     setup_test (false, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6
             INTERFACES_IPV6_ADDRESS_IP, NULL));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NULL (address_deleted);
+    NP_TEST_END ("ADDRESS: Link \"eth99\" is not currently active\n")
 }
 
 void test_static_addr6_delete ()
 {
+    NP_TEST_START
     setup_test (true, NULL);
     NP_ASSERT_TRUE (apteryx_static_address_cb (PATHV6
             INTERFACES_IPV6_ADDRESS_IP, NULL));
     NP_ASSERT_NULL (address_added);
     NP_ASSERT_NOT_NULL (address_deleted);
     assert_address_valid (address_deleted, AF_INET6);
+    NP_TEST_END ("")
 }

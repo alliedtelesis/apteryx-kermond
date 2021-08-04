@@ -19,60 +19,11 @@
  */
 #include "neighbor-cache.c"
 
-#include <np.h>
+#include "test.h"
 
-#define IFNAME      "eth1"
-#define IFINDEX     "99"
 #define IFPATH      INTERFACES_STATE_PATH"/"IFNAME
-#define ADDRV4      "192.168.1.1"
-#define ADDRV6      "fc00::1"
-#define LLADDR      "00:11:22:33:44:55"
 #define IPV4PATH    IFPATH"/"INTERFACES_STATE_IPV4_NEIGHBOR"/"ADDRV4
 #define IPV6PATH    IFPATH"/"INTERFACES_STATE_IPV6_NEIGHBOR"/"ADDRV6
-
-static char *
-mock_if_indextoname (unsigned int ifindex, char *ifname)
-{
-    strcpy (ifname, IFNAME);
-    return ifname;
-}
-
-static gpointer
-apteryx_node_copy_fn (gconstpointer src, gpointer data)
-{
-    return (gpointer) g_strdup ((const gchar *) src);
-}
-
-static GNode *apteryx_tree;
-static bool
-mock_apteryx_set_tree_full (GNode *root, uint64_t ts, bool wait_for_completion)
-{
-    NP_ASSERT_NULL (apteryx_tree);
-    apteryx_tree = g_node_copy_deep (root, apteryx_node_copy_fn, NULL);
-    return true;
-}
-
-static char *apteryx_path;
-static char *apteryx_value;
-static bool
-mock_apteryx_set_full (const char *path, const char *value, uint64_t ts,
-                       bool wait_for_completion)
-{
-    NP_ASSERT_NULL (apteryx_path);
-    NP_ASSERT_NULL (apteryx_value);
-    apteryx_path = g_strdup (path);
-    apteryx_value = g_strdup (value);
-    return true;
-}
-
-static char *apteryx_prune_path;
-static bool
-mock_apteryx_prune_path (const char *path)
-{
-    NP_ASSERT_NULL (apteryx_prune_path);
-    apteryx_prune_path = g_strdup (path);
-    return true;
-}
 
 static GNode*
 apteryx_get_node (GNode *tree, char *path)
@@ -98,7 +49,7 @@ static struct nl_object *
 make_neighbor (int family, char *dst, char *lladdr)
 {
     struct rtnl_neigh *rn = rtnl_neigh_alloc ();
-    rtnl_neigh_set_ifindex (rn, atoi (IFINDEX));
+    rtnl_neigh_set_ifindex (rn, IFINDEX);
     rtnl_neigh_set_family (rn, family);
     if (dst)
     {
@@ -137,6 +88,7 @@ setup_test (char *ignore)
 
 void test_neighbor_invalid ()
 {
+    NP_TEST_START
     setup_test ("invalid neighbor cb action");
     struct nl_object *neigh = make_neighbor (0, NULL, NULL);
     nl_neighbor_cb (-1, NULL, neigh);
@@ -145,20 +97,24 @@ void test_neighbor_invalid ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("NEIGHBOR-CACHE: invalid neighbor cb action:-1\n")
 }
 
 void test_neighbor_null ()
 {
+    NP_TEST_START
     setup_test ("missing neighbor object");
     nl_neighbor_cb (NL_ACT_NEW, NULL, NULL);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("NEIGHBOR-CACHE: missing neighbor object\n")
 }
 
 void test_neighbor_incomplete ()
 {
+    NP_TEST_START
     setup_test ("invalid neighbor family");
     struct nl_object *neigh = make_neighbor (0, NULL, NULL);
     nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
@@ -167,10 +123,12 @@ void test_neighbor_incomplete ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("NEIGHBOR-CACHE: invalid neighbor family:0\n")
 }
 
 void test_neighbor_ipv4 ()
 {
+    NP_TEST_START
     setup_test (NULL);
     struct nl_object *neigh = make_neighbor (AF_INET, ADDRV4, LLADDR);
     nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
@@ -187,10 +145,12 @@ void test_neighbor_ipv4 ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("")
 }
 
 void test_neighbor_ipv6 ()
 {
+    NP_TEST_START
     setup_test (NULL);
     struct nl_object *neigh = make_neighbor (AF_INET6, ADDRV6, LLADDR);
     nl_neighbor_cb (NL_ACT_NEW, NULL, neigh);
@@ -213,4 +173,5 @@ void test_neighbor_ipv6 ()
     NP_ASSERT_NULL (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NULL (apteryx_prune_path);
+    NP_TEST_END ("")
 }
