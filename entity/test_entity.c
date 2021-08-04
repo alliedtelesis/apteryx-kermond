@@ -22,8 +22,8 @@
 
 // apteryx -s /entities/private/children/lan/children/server/dynamic/ipv4/interfaces/p5p1 p5p1
 #define ZONE    ENTITIES_PATH "/private"
-#define NETWORK ZONE "/" ENTITIES_CHILDREN "/lan"
-#define HOST    NETWORK "/" ENTITIES_CHILDREN_CHILDREN "/server"
+#define NETWORK ZONE "/" ENTITIES_CHILDREN_PATH "/lan"
+#define HOST    NETWORK "/" ENTITIES_CHILDREN_CHILDREN_PATH "/server"
 #define DYNv4   HOST "/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC_IPV4_INTERFACES "/" IFNAME
 #define DYNv6   HOST "/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC_IPV6_INTERFACES "/" IFNAME
 

@@ -92,9 +92,9 @@ nl_route_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
 
     /* Update Apteryx */
     if (rtnl_route_get_family (rt) == AF_INET)
-        apteryx_set_string (ROUTING_IPV4_FIB_PATH, route, data);
+        apteryx_set_string (ROUTING_IPV4_FIB, route, data);
     else
-        apteryx_set_string (ROUTING_IPV6_FIB_PATH, route, data);
+        apteryx_set_string (ROUTING_IPV6_FIB, route, data);
 
     free (route);
 }
@@ -105,8 +105,8 @@ fib_init (void)
     DEBUG ("FIB: Initialising\n");
 
     /* Setup Apteryx */
-    apteryx_prune (ROUTING_IPV4_FIB_PATH);
-    apteryx_prune (ROUTING_IPV6_FIB_PATH);
+    apteryx_prune (ROUTING_IPV4_FIB);
+    apteryx_prune (ROUTING_IPV6_FIB);
 
     /* Setup Netlink */
     netlink_register ("route/route", nl_route_cb);
@@ -123,8 +123,8 @@ fib_exit ()
     netlink_unregister ("route/route", nl_route_cb);
 
     /* Remove FIB from Apteryx */
-    apteryx_prune (ROUTING_IPV4_FIB_PATH);
-    apteryx_prune (ROUTING_IPV6_FIB_PATH);
+    apteryx_prune (ROUTING_IPV4_FIB);
+    apteryx_prune (ROUTING_IPV6_FIB);
 }
 
 MODULE_CREATE ("fib", fib_init, NULL, fib_exit);

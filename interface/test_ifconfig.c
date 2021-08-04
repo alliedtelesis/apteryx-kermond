@@ -21,7 +21,7 @@
 
 #include "test.h"
 
-#define PATH    INTERFACE_INTERFACES_PATH "/eth1/" INTERFACE_INTERFACES_SETTINGS "/"
+#define PATH    INTERFACE_INTERFACES_PATH "/eth1/" INTERFACE_INTERFACES_SETTINGS_PATH "/"
 
 static void
 setup_test (bool active, char *parameter, char *value, char *ignore)
@@ -32,7 +32,7 @@ setup_test (bool active, char *parameter, char *value, char *ignore)
         GNode *node;
         apteryx_tree = g_node_new (strdup (INTERFACE_INTERFACES_PATH));
         node = APTERYX_NODE(apteryx_tree, strdup ("eth1"));
-        node = APTERYX_NODE(node, strdup (INTERFACE_INTERFACES_SETTINGS));
+        node = APTERYX_NODE(node, strdup (INTERFACE_INTERFACES_SETTINGS_PATH));
         APTERYX_LEAF (node, strdup (parameter), strdup (value));
     }
     link_cache = (struct nl_cache *) ~0;

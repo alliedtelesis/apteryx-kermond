@@ -87,7 +87,7 @@ link_to_apteryx (struct rtnl_link *link)
 
     /* Build tree */
     root = g_node_new (strdup ("/"));
-    ifalias = apteryx_path_to_node (root, INTERFACE_IF_ALIAS_PATH, NULL);
+    ifalias = apteryx_path_to_node (root, INTERFACE_IF_ALIAS, NULL);
     APTERYX_LEAF (ifalias, g_strdup_printf ("%d", rtnl_link_get_ifindex (link)),
                   strdup (rtnl_link_get_name (link)));
     node = apteryx_path_to_node (root, INTERFACE_INTERFACES_PATH, NULL);
@@ -110,7 +110,7 @@ link_to_apteryx (struct rtnl_link *link)
                       g_strdup_printf ("%d", INTERFACE_INTERFACES_L3_L3_IF));
     }
     /* Status */
-    status = APTERYX_NODE (node, strdup (INTERFACE_INTERFACES_STATUS));
+    status = APTERYX_NODE (node, strdup (INTERFACE_INTERFACES_STATUS_PATH));
     APTERYX_LEAF (status, strdup ("admin-status"),
                   g_strdup_printf ("%d", rtnl_link_get_flags (link) & IFF_UP ?
                                    INTERFACE_INTERFACES_STATUS_ADMIN_STATUS_ADMIN_UP :
@@ -208,14 +208,14 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
     if (action == NL_ACT_DEL)
     {
         /* Remove the if-alias */
-        path = g_strdup_printf (INTERFACE_IF_ALIAS_PATH "/%d",
+        path = g_strdup_printf (INTERFACE_IF_ALIAS "/%d",
                                 rtnl_link_get_ifindex (link));
         apteryx_set (path, NULL);
         free (path);
 
         /* Generate path to interface status information */
         path =
-            g_strdup_printf (INTERFACE_INTERFACES_PATH "/%s/" INTERFACE_INTERFACES_STATUS,
+            g_strdup_printf (INTERFACE_INTERFACES_PATH "/%s/" INTERFACE_INTERFACES_STATUS_PATH,
                              rtnl_link_get_name (link));
         apteryx_prune (path);
         free (path);
@@ -243,7 +243,7 @@ ifstatus_cleanup (void)
     for (GList * iter = iflist; iter; iter = iter->next)
     {
         /* Prune the status tree */
-        char *path = g_strdup_printf ("%s/" INTERFACE_INTERFACES_STATUS,
+        char *path = g_strdup_printf ("%s/" INTERFACE_INTERFACES_STATUS_PATH,
                                       (char *) iter->data);
         apteryx_prune (path);
         free (path);
@@ -251,7 +251,7 @@ ifstatus_cleanup (void)
     g_list_free_full (iflist, free);
 
     /* Throw away the if-alias table */
-    apteryx_prune (INTERFACE_IF_ALIAS_PATH);
+    apteryx_prune (INTERFACE_IF_ALIAS);
 }
 
 /**

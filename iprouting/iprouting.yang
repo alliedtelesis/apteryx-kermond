@@ -1,0 +1,143 @@
+module iprouting {
+  namespace "https://github.com/alliedtelesis/apteryx";
+  prefix iprouting;
+
+  container routing {
+    container ipv4 {
+      leaf next-index {
+        description "Next (rib) index to use (use CAS to update)";
+        type string;
+      }
+      list rib {
+        key "id";
+        description "Configured routes";
+        leaf id {
+          description "The index of this entry, get from 'next-index'";
+          type string;
+        }
+        leaf vrf-id {
+          description "Which vrf is this route for ?";
+          default "0";
+          type int32;
+        }
+        leaf prefix {
+          description "What address range does this route apply to ?";
+          type string;
+        }
+        leaf nexthop {
+          description "Who to route this traffic to ?";
+          type string;
+        }
+        leaf ifname {
+          description "Which interface to send this traffic over ?";
+          type string;
+        }
+        leaf distance {
+          description "Adminstrative distance of this route";
+          type string;
+        }
+        leaf metric {
+          description "Relative metric (preference) of this route, compared to others with the same 'distance'";
+          type string;
+        }
+        leaf snmp-route-type {
+          description "What type does snmp think this route is?";
+          type enumeration {
+            enum other {
+              value 1;
+            }
+            enum reject {
+              value 2;
+            }
+            enum local {
+              value 3;
+            }
+            enum remote {
+              value 4;
+            }
+          }
+        }
+        leaf dhcp-interface {
+          description "Which interface was this dhcp learnt on ?";
+          config false;
+          type string;
+        }
+        leaf protocol {
+          description  "Which protocol is this route ?";
+          type string;
+        }
+      }
+      leaf-list fib {
+        type string;
+      }
+    }
+    container ipv6 {
+      leaf next-index {
+        description "Next (rib) index to use (use CAS to update)";
+        type string;
+      }
+      list rib {
+        key "id";
+        description "Configured routes";
+        leaf id {
+          description "The index of this entry, get from 'next-index'";
+          type string;
+        }
+        leaf vrf-id {
+          description "Which vrf is this route for ?";
+          default "0";
+          type int32;
+        }
+        leaf prefix {
+          description "What address range does this route apply to ?";
+          type string;
+        }
+        leaf nexthop {
+          description "Who to route this traffic to ?";
+          type string;
+        }
+        leaf ifname {
+          description "Which interface to send this traffic over ?";
+          type string;
+        }
+        leaf distance {
+          description "Adminstrative distance of this route";
+          type string;
+        }
+        leaf metric {
+          description "Relative metric (preference) of this route, compared to others with the same 'distance'";
+          type string;
+        }
+        leaf snmp-route-type {
+          description "What type does snmp think this route is ?";
+          type enumeration {
+            enum other {
+              value 1;
+            }
+            enum reject {
+              value 2;
+            }
+            enum local {
+              value 3;
+            }
+            enum remote {
+              value 4;
+            }
+          }
+        }
+        leaf dhcp-interface {
+          description "Which interface was this dhcp learnt on ?";
+          config false;
+          type string;
+        }
+        leaf protocol {
+          description "Which protocol is this route ?";
+          type string;
+        }
+      }
+      leaf-list fib {
+        type string;
+      }
+    }
+  }
+}

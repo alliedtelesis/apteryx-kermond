@@ -44,7 +44,7 @@ apteryx_if_cb (const char *path, const char *value)
 
     /* Parse family, index and the parameter that has changed */
     if (!path || sscanf (path, INTERFACE_INTERFACES_PATH "/%64[^/]/"
-                INTERFACE_INTERFACES_SETTINGS "/%64s", ifname, parameter) != 2)
+                INTERFACE_INTERFACES_SETTINGS_PATH "/%64s", ifname, parameter) != 2)
     {
         ERROR ("IFCONFIG: Invalid interface settings path (%s)\n", path);
         return false;
@@ -136,7 +136,7 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
 
     /* Load all configuration for this interface */
     path = g_strdup_printf (INTERFACE_INTERFACES_PATH "/%s/"
-                            INTERFACE_INTERFACES_SETTINGS, rtnl_link_get_name (link));
+                            INTERFACE_INTERFACES_SETTINGS_PATH, rtnl_link_get_name (link));
     apteryx_rewatch_tree (path, apteryx_if_cb);
     free (path);
 }
@@ -183,13 +183,13 @@ ifconfig_start ()
 
     /* Setup Apteryx watchers */
     apteryx_watch (INTERFACE_INTERFACES_PATH "/*/"
-                   INTERFACE_INTERFACES_SETTINGS "/*", apteryx_if_cb);
+                   INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_if_cb);
 
     /* Load existing configuration */
     GList *iflist = apteryx_search (INTERFACE_INTERFACES_PATH "/");
     for (GList * iter = iflist; iter; iter = iter->next)
     {
-        char *path = g_strdup_printf ("%s/" INTERFACE_INTERFACES_SETTINGS,
+        char *path = g_strdup_printf ("%s/" INTERFACE_INTERFACES_SETTINGS_PATH,
                                       (char *) iter->data);
         apteryx_rewatch_tree (path, apteryx_if_cb);
         free (path);
@@ -209,7 +209,7 @@ ifconfig_exit ()
 
     /* Detach Apteryx watchers */
     apteryx_unwatch (INTERFACE_INTERFACES_PATH "/*/"
-                     INTERFACE_INTERFACES_SETTINGS "/*", apteryx_if_cb);
+                     INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_if_cb);
 
     /* Detach our callback and unref the link cache */
     if (sock)

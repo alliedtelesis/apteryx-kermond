@@ -52,11 +52,11 @@ static char*
 entity_path (char *zone, char *network, char *host)
 {
     if (zone && network && host)
-        return g_strdup_printf (ENTITIES_PATH "/%s/" ENTITIES_CHILDREN "/%s/"
-                        ENTITIES_CHILDREN_CHILDREN "/%s",
+        return g_strdup_printf (ENTITIES_PATH "/%s/" ENTITIES_CHILDREN_PATH "/%s/"
+                        ENTITIES_CHILDREN_CHILDREN_PATH "/%s",
                         zone, network, host);
     else if (zone && network)
-        return g_strdup_printf (ENTITIES_PATH "/%s/" ENTITIES_CHILDREN "/%s/",
+        return g_strdup_printf (ENTITIES_PATH "/%s/" ENTITIES_CHILDREN_PATH "/%s/",
                 zone, network);
     else if (zone)
         return g_strdup_printf (ENTITIES_PATH "/%s/", zone);
@@ -260,8 +260,8 @@ watch_entities (const char *path, const char *value)
     char ifname[64];
 
     /* Check dynamic host entities */
-    if (path && sscanf (path, ENTITIES_PATH "/%64[^/]/" ENTITIES_CHILDREN "/%64[^/]/"
-            ENTITIES_CHILDREN_CHILDREN "/%64[^/]/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC
+    if (path && sscanf (path, ENTITIES_PATH "/%64[^/]/" ENTITIES_CHILDREN_PATH "/%64[^/]/"
+            ENTITIES_CHILDREN_CHILDREN_PATH "/%64[^/]/" ENTITIES_CHILDREN_CHILDREN_DYNAMIC_PATH
             "/ipv%d/interfaces/%64s",
             zone, network, host, &family, ifname) == 5)
     {

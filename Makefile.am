@@ -42,18 +42,11 @@ BUILT_SOURCES = \
 
 CLEANFILES = $BUILT_SOURCES
 
-XML2C ?= ./xml2c
-
-SUFFIXES = .h .xml .yang
-
-%.h : %.xml
+SUFFIXES = .h .yang
+CUR_DIR = $(CURDIR)
+%.h: %.yang
 	@echo "Generating "$@""
-	$(Q)$(XML2C) $<  > $@
-
-%.xml: %.yang
-	@echo "Generating "$@""
-	$(Q)pyang -f yin $< | xsltproc apteryx-xml.xslt - > $@
-
+	$(Q)pyang --plugindir $(CUR_DIR) -f cpaths -o $@ $<
 
 if HAVE_TESTS
 noinst_PROGRAMS = unittest

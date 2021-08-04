@@ -160,12 +160,12 @@ void test_ifstatus_link_del ()
     nl_object_put (link);
     NP_ASSERT_NULL (apteryx_tree);
     NP_ASSERT_NOT_NULL (apteryx_path);
-    NP_ASSERT_STR_EQUAL (apteryx_path, INTERFACE_IF_ALIAS_PATH"/"SIFINDEX);
+    NP_ASSERT_STR_EQUAL (apteryx_path, INTERFACE_IF_ALIAS"/"SIFINDEX);
     free (apteryx_path);
     NP_ASSERT_NULL (apteryx_value);
     NP_ASSERT_NOT_NULL (apteryx_prune_path);
     NP_ASSERT_STR_EQUAL (apteryx_prune_path,
-            INTERFACE_INTERFACES_PATH"/"IFNAME"/"INTERFACE_INTERFACES_STATUS);
+            INTERFACE_INTERFACES_PATH"/"IFNAME"/"INTERFACE_INTERFACES_STATUS_PATH);
     free (apteryx_prune_path);
     NP_TEST_END ("")
 }
@@ -179,7 +179,7 @@ void test_ifstatus_admin_status_default_down ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "admin-status",
+            INTERFACE_INTERFACES_STATUS_PATH, "admin-status",
             xstr (INTERFACE_INTERFACES_STATUS_ADMIN_STATUS_ADMIN_DOWN));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -198,7 +198,7 @@ void test_ifstatus_admin_status_up ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "admin-status",
+            INTERFACE_INTERFACES_STATUS_PATH, "admin-status",
             xstr (INTERFACE_INTERFACES_STATUS_ADMIN_STATUS_ADMIN_UP));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -217,7 +217,7 @@ void test_ifstatus_oper_status ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "oper-status",
+            INTERFACE_INTERFACES_STATUS_PATH, "oper-status",
             "6");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -236,7 +236,7 @@ void test_ifstatus_flags ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "flags",
+            INTERFACE_INTERFACES_STATUS_PATH, "flags",
             "65");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -258,7 +258,7 @@ void test_ifstatus_phys_address ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "phys-address",
+            INTERFACE_INTERFACES_STATUS_PATH, "phys-address",
             "00:11:22:33:44:55");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -276,7 +276,7 @@ void test_ifstatus_promisc_default_off ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "promisc",
+            INTERFACE_INTERFACES_STATUS_PATH, "promisc",
             xstr (INTERFACE_INTERFACES_STATUS_PROMISC_PROMISC_OFF));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -295,7 +295,7 @@ void test_ifstatus_promisc_on ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "promisc",
+            INTERFACE_INTERFACES_STATUS_PATH, "promisc",
             xstr (INTERFACE_INTERFACES_STATUS_PROMISC_PROMISC_ON));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -314,7 +314,7 @@ void test_ifstatus_qdisc ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "qdisc",
+            INTERFACE_INTERFACES_STATUS_PATH, "qdisc",
             "noqueue");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -332,7 +332,7 @@ void test_ifstatus_mtu_default_1500 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "mtu",
+            INTERFACE_INTERFACES_STATUS_PATH, "mtu",
             xstr (INTERFACE_INTERFACES_STATUS_MTU_DEFAULT));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -351,7 +351,7 @@ void test_ifstatus_mtu_68 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "mtu",
+            INTERFACE_INTERFACES_STATUS_PATH, "mtu",
             "68");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -370,7 +370,7 @@ void test_ifstatus_mtu_16535 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "mtu",
+            INTERFACE_INTERFACES_STATUS_PATH, "mtu",
             "16535");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -388,7 +388,7 @@ void test_ifstatus_speed_default ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "speed",
+            INTERFACE_INTERFACES_STATUS_PATH, "speed",
             "0");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -407,7 +407,7 @@ void test_ifstatus_speed_1000 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "speed",
+            INTERFACE_INTERFACES_STATUS_PATH, "speed",
             "1000");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -425,7 +425,7 @@ void test_ifstatus_duplex_default_auto ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "duplex",
+            INTERFACE_INTERFACES_STATUS_PATH, "duplex",
             xstr (INTERFACE_INTERFACES_STATUS_DUPLEX_AUTO));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -444,7 +444,7 @@ void test_ifstatus_duplex_full ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "duplex",
+            INTERFACE_INTERFACES_STATUS_PATH, "duplex",
             xstr (INTERFACE_INTERFACES_STATUS_DUPLEX_FULL));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -463,7 +463,7 @@ void test_ifstatus_duplex_half ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "duplex",
+            INTERFACE_INTERFACES_STATUS_PATH, "duplex",
             xstr (INTERFACE_INTERFACES_STATUS_DUPLEX_HALF));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -481,7 +481,7 @@ void test_ifstatus_arptype_default_void ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "arptype",
+            INTERFACE_INTERFACES_STATUS_PATH, "arptype",
             xstr (INTERFACE_INTERFACES_STATUS_ARPTYPE_VOID));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -500,7 +500,7 @@ void test_ifstatus_arptype_ethernet ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "arptype",
+            INTERFACE_INTERFACES_STATUS_PATH, "arptype",
             xstr (INTERFACE_INTERFACES_STATUS_ARPTYPE_ETHERNET));
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -518,7 +518,7 @@ void test_ifstatus_rxq_default_1 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "rxq",
+            INTERFACE_INTERFACES_STATUS_PATH, "rxq",
             "1");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -537,7 +537,7 @@ void test_ifstatus_rxq_2 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "rxq",
+            INTERFACE_INTERFACES_STATUS_PATH, "rxq",
             "2");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -555,7 +555,7 @@ void test_ifstatus_txqlen_default_1000 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "txqlen",
+            INTERFACE_INTERFACES_STATUS_PATH, "txqlen",
             "1000");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -574,7 +574,7 @@ void test_ifstatus_txqlen_2000 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "txqlen",
+            INTERFACE_INTERFACES_STATUS_PATH, "txqlen",
             "2000");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -592,7 +592,7 @@ void test_ifstatus_txq_default_1 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "txq",
+            INTERFACE_INTERFACES_STATUS_PATH, "txq",
             "1");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);
@@ -611,7 +611,7 @@ void test_ifstatus_txq_2 ()
     nl_object_put (link);
     NP_ASSERT_NOT_NULL (apteryx_tree);
     assert_tree_parameter (apteryx_tree, IFNAME,
-            INTERFACE_INTERFACES_STATUS, "txq",
+            INTERFACE_INTERFACES_STATUS_PATH, "txq",
             "2");
     apteryx_free_tree (apteryx_tree);
     NP_ASSERT_NULL (apteryx_path);

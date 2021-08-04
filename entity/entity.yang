@@ -1,0 +1,62 @@
+module entity {
+
+  namespace "https://github.com/alliedtelesis/apteryx";
+  prefix entity;
+
+  list entities {
+    key "name";
+    leaf name {
+      description "Name of zone";
+      type string;
+    }
+    leaf fullname {
+      description "Name of zone";
+      type string;
+    }
+    list children {
+      key "name";
+      leaf name {
+        description "Name of network";
+        type string;
+      }
+      leaf fullname {
+        description "Name of zone DOT Name of network";
+        type string;
+      }
+      leaf-list subnets {
+        type string;
+        description "Network address (with interface name) that are part of this network. e.g. 192.168.1.0_24%eth0";
+      }
+      list children {
+        key "name";
+        leaf name {
+          description "Name of host";
+          type string;
+        }
+        leaf fullname {
+          description "Name of zone DOT Name of network DOT Name of host";
+          type string;
+        }
+        leaf-list subnets {
+          type string;
+          description "IP address(es) and mask for this host. e.g. 192.127.1.0_24";
+        }
+        container dynamic {
+          container ipv4 {
+            leaf-list interfaces {
+              type string;
+              description "Interface name";
+            }
+          }
+          container ipv6 {
+            leaf-list interfaces {
+              type string;
+              description "Interface name";
+            }
+          }
+          description "Places from which to acquire IP addresses";
+        }
+      }
+    }
+  }
+}
