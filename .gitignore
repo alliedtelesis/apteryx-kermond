@@ -1,19 +1,9 @@
 *.o
 apteryx-kermond
-dot1q/dot1q.h
-entity/entity.h
-icmp/ip-icmp.h
-icmp/ip-icmp.xml
-interface/interface.h
-ip/ietf-ip.h
-ip/ietf-ip.xml
-iprouting/iprouting.h
-neighbor/ip-neighbor.h
-neighbor/ip-neighbor.xml
-tcp/ip-tcp.h
-tcp/ip-tcp.xml
-gcov
-unittest
+models/*.h
+models/*.xml
+.gcov
+.build
 __pycache__
 
 #autotools

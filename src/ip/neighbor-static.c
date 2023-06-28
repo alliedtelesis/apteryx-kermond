@@ -20,6 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/neighbour.h>
 #include <netlink/route/link.h>
+#include "ietf-interfaces.h"
 #include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
@@ -60,7 +61,7 @@ apteryx_to_neighbor (const char *path, const char *lladdr)
     }
 
     /* Currently only process phys-address parameter */
-    if (strcmp (parameter, INTERFACES_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS) != 0)
+    if (strcmp (parameter, INTERFACES_INTERFACE_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS) != 0)
     {
         return NULL;
     }
@@ -182,7 +183,7 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
         new_obj = old_obj;
 
     /* Find all static IPv4 neighbors with this interface */
-    path = g_strdup_printf (INTERFACES_PATH"/%s/"INTERFACES_IPV4_NEIGHBOR,
+    path = g_strdup_printf (INTERFACES_PATH"/%s"INTERFACES_INTERFACE_IPV4_NEIGHBOR_PATH"/",
             rtnl_link_get_name (link));
     paths = apteryx_search (path);
     g_free (path);
@@ -227,15 +228,15 @@ static_neighbor_start ()
     DEBUG ("STATIC-NEIGHBOR: Starting\n");
 
     /* Setup Apteryx */
-    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
-    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
-    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
 
     return true;
@@ -250,9 +251,9 @@ static_neighbor_exit ()
     DEBUG ("STATIC-NEIGHBOR: Exiting\n");
 
     /* Unconfigure Apteryx */
-    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV4_NEIGHBOR,
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
-    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV6_NEIGHBOR,
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_NEIGHBOR_PATH,
             apteryx_static_neighbors_cb);
 
     /* Remove Netlink interface */

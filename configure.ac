@@ -22,5 +22,11 @@ AC_ARG_ENABLE([tests],
 esac],[tests=true])
 AM_CONDITIONAL([HAVE_TESTS], [test x$tests = xtrue])
 
+AC_ARG_WITH([pyang],
+  [AS_HELP_STRING([--with-pyang], [path to pyang])],
+  [use_pyang=$withval],
+  [use_pyang="pyang"])
+AC_SUBST(PYANG, $use_pyang)
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

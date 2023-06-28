@@ -42,7 +42,7 @@ watch_ipv4_settings (const char *path, const char *value)
     VERBOSE ("NEIGHBOR: %s = %s\n", path, value);
 
     /* Opportunistic Neighbor Discovery */
-    if (path && strcmp (path, IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND_PATH) == 0)
+    if (path && strcmp (path, IP_NEIGHBOR_IPV4_OPPORTUNISTIC_ND) == 0)
     {
         int mode = apteryx_parse_boolean (path, value, false) ? 1 : 0;
         char *cmd = g_strdup_printf ("sysctl -w net.ipv4.aggressive_nd=%d", mode);
@@ -78,31 +78,14 @@ watch_ipv4_settings (const char *path, const char *value)
         /* Proxy Arp */
         else if (strcmp (parameter, IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP) == 0)
         {
-            int mode = 0;
-            if (value && strcmp (value,
-                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_DISABLED) == 0)
+            int mode = IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_DEFAULT;
+            if ((value && sscanf (value, "%d", &mode) != 1) ||
+                (mode < IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_DISABLED ||
+                mode > IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_BOTH))
             {
-                mode = 0;
-            }
-            else if (value && strcmp (value,
-                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_ENABLED) == 0)
-            {
-                mode = 1;
-            }
-            else if (value && strcmp (value,
-                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_LOCAL) == 0)
-            {
-                mode = 2;
-            }
-            else if (value && strcmp (value,
-                    IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_BOTH) == 0)
-            {
-                mode = 3;
-            }
-            else if (value)
-            {
-                ERROR ("Invalid %s value (%s) using default (%d)\n",
-                                path, value, mode);
+                mode = IP_NEIGHBOR_IPV4_INTERFACES_PROXY_ARP_DEFAULT;
+                ERROR ("NEIGHBOR: Invalid proxy-arp (%s) using default (%d)\n",
+                    value, mode);
             }
             char *cmd = g_strdup_printf ("sysctl -w net.ipv4.conf.%s.proxy_arp=%d", ifname, mode);
             return system_call (cmd);
@@ -130,7 +113,7 @@ static bool
 watch_ipv6_settings (const char *path, const char *value)
 {
     /* Opportunistic Neighbor Discovery */
-    if (path && strcmp (path, IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND_PATH) == 0)
+    if (path && strcmp (path, IP_NEIGHBOR_IPV6_OPPORTUNISTIC_ND) == 0)
     {
         int mode = apteryx_parse_boolean (path, value, false) ? 1 : 0;
         char *cmd = g_strdup_printf ("sysctl -w net.ipv6.icmp.aggressive_nd=%d", mode);

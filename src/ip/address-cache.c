@@ -21,6 +21,7 @@
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
 #include <arpa/inet.h>
+#include "ietf-interfaces.h"
 #include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
@@ -42,7 +43,6 @@ address_to_apteryx (struct rtnl_addr *ra)
     char ifname[IFNAMSIZ] = {};
     int prefixlen;
     GNode *root;
-    GNode *node;
 
     /* Parse */
     inet_ntop (rtnl_addr_get_family (ra),
@@ -58,25 +58,24 @@ address_to_apteryx (struct rtnl_addr *ra)
             INTERFACES_STATE_PATH"/%s/%s/%s",
             ifname,
             rtnl_addr_get_family (ra) == AF_INET ?
-                    INTERFACES_STATE_IPV4_ADDRESS :
-                    INTERFACES_STATE_IPV6_ADDRESS,
+                    INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_PATH :
+                    INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_PATH,
                     ip));
     if (rtnl_addr_get_family (ra) == AF_INET)
     {
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_IP), strdup (ip));
-        node = APTERYX_NODE (root, strdup (INTERFACES_STATE_IPV4_ADDRESS_SUBNET));
-        APTERYX_LEAF_INT (node, "prefix-length", prefixlen);
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN),
-                            strdup (INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_OTHER));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_IP), strdup (ip));
+        APTERYX_LEAF_INT (root, "prefix-length", prefixlen);
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_ORIGIN),
+                            g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_ORIGIN_OTHER));
     }
     else
     {
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_IP), strdup (ip));
-        APTERYX_LEAF_INT (root, INTERFACES_STATE_IPV6_ADDRESS_PREFIX_LENGTH, prefixlen);
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_ORIGIN),
-                            strdup (INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_OTHER));
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_ADDRESS_STATUS),
-                            strdup (INTERFACES_STATE_IPV6_ADDRESS_STATUS_UNKNOWN));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_IP), strdup (ip));
+        APTERYX_LEAF_INT (root, INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_PREFIX_LENGTH, prefixlen);
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_ORIGIN),
+                            g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_ORIGIN_OTHER));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_STATUS),
+                            g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_STATUS_UNKNOWN));
     }
 
     return root;
@@ -150,8 +149,8 @@ nl_address_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
         path = g_strdup_printf (INTERFACES_STATE_PATH"/%s/%s/%s",
                         ifname,
                         rtnl_addr_get_family (ra) == AF_INET ?
-                                INTERFACES_STATE_IPV4_ADDRESS :
-                                INTERFACES_STATE_IPV6_ADDRESS,
+                                INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_PATH :
+                                INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_PATH,
                         ip);
 
         apteryx_prune (path);
@@ -176,8 +175,8 @@ address_cache_init (void)
     DEBUG ("ADDRESS-CACHE: Initialising\n");
 
     /* Start with an empty cache */
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV4_ADDRESS);
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV6_ADDRESS);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_PATH);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_PATH);
 
     /* Configure Netlink */
     netlink_register ("route/addr", nl_address_cb);
@@ -207,8 +206,8 @@ address_cache_exit ()
     netlink_unregister ("route/addr", nl_address_cb);
 
     /* Clear out the cache */
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV4_ADDRESS);
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV6_ADDRESS);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV4_ADDRESS_PATH);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_PATH);
 }
 
 MODULE_CREATE ("address-cache", address_cache_init, NULL, address_cache_exit);

@@ -20,6 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
+#include "ietf-interfaces.h"
 #include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
@@ -59,7 +60,7 @@ apteryx_to_address (const char *path, const char *lladdr)
     }
 
     /* Currently only process ip parameter */
-    if (strcmp (parameter, INTERFACES_STATE_IPV6_ADDRESS_IP) != 0)
+    if (strcmp (parameter, INTERFACES_STATE_INTERFACE_IPV6_ADDRESS_IP) != 0)
     {
         return NULL;
     }
@@ -167,7 +168,7 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
         new_obj = old_obj;
 
     /* Find all static IPv4 addresses with this interface */
-    path = g_strdup_printf (INTERFACES_PATH"/%s/"INTERFACES_IPV4_ADDRESS,
+    path = g_strdup_printf (INTERFACES_PATH"/%s"INTERFACES_INTERFACE_IPV4_ADDRESS_PATH"/",
             rtnl_link_get_name (link));
     paths = apteryx_search (path);
     g_free (path);
@@ -212,15 +213,15 @@ static_address_start ()
     DEBUG ("STATIC-ADDRESS: Starting\n");
 
     /* Setup Apteryx */
-    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV4_ADDRESS,
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_ADDRESS_PATH,
             apteryx_static_address_cb);
-    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_IPV6_ADDRESS,
+    apteryx_watch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_ADDRESS_PATH,
             apteryx_static_address_cb);
 
     /* Load existing configuration */
-    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV4_ADDRESS,
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_ADDRESS_PATH,
             apteryx_static_address_cb);
-    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_IPV6_ADDRESS,
+    apteryx_rewatch_tree (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_ADDRESS_PATH,
             apteryx_static_address_cb);
 
     return true;
@@ -235,9 +236,9 @@ static_address_exit ()
     DEBUG ("STATIC-ADDRESS: Exiting\n");
 
     /* Unconfigure Apteryx */
-    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV4_ADDRESS,
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV4_ADDRESS_PATH,
             apteryx_static_address_cb);
-    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_IPV6_ADDRESS,
+    apteryx_unwatch (INTERFACES_PATH"/*/"INTERFACES_INTERFACE_IPV6_ADDRESS_PATH,
             apteryx_static_address_cb);
 
     /* Remove Netlink interface */

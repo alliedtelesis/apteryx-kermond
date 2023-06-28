@@ -20,6 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/neighbour.h>
 #include <netlink/route/link.h>
+#include "ietf-interfaces.h"
 #include "ietf-ip.h"
 
 /* Fallback if we have no link cache */
@@ -59,60 +60,60 @@ neighbor_to_apteryx (struct rtnl_neigh *rn)
             INTERFACES_STATE_PATH"/%s/%s/%s",
             ifname,
             rtnl_neigh_get_family (rn) == AF_INET ?
-                    INTERFACES_STATE_IPV4_NEIGHBOR :
-                    INTERFACES_STATE_IPV6_NEIGHBOR,
+                    INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_PATH :
+                    INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_PATH,
             dst));
     if (rtnl_neigh_get_family (rn) == AF_INET)
     {
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_IP), strdup (dst));
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS), strdup (lladdr));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_IP), strdup (dst));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_LINK_LAYER_ADDRESS), strdup (lladdr));
         if (state == NUD_PERMANENT)
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN),
-                    strdup (INTERFACES_STATE_IPV4_ADDRESS_ORIGIN_STATIC));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_ORIGIN),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_ORIGIN_STATIC));
         else
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN),
-                    strdup (INTERFACES_STATE_IPV4_NEIGHBOR_ORIGIN_DYNAMIC));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_ORIGIN),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_ORIGIN_DYNAMIC));
     }
     else
     {
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_IP), strdup (dst));
-        APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS), strdup (lladdr));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_IP), strdup (dst));
+        APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_LINK_LAYER_ADDRESS), strdup (lladdr));
         if (state == NUD_PERMANENT)
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_ORIGIN),
-                    strdup (INTERFACES_STATE_IPV6_ADDRESS_ORIGIN_STATIC));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_ORIGIN),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_ORIGIN_STATIC));
         else
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_ORIGIN),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_ORIGIN_DYNAMIC));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_ORIGIN),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_ORIGIN_DYNAMIC));
         if (flags & NTF_ROUTER)
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_IS_ROUTER),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_IS_ROUTER_TRUE));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_IS_ROUTER),
+                    strdup ("1"));
         switch (rtnl_neigh_get_state (rn))
         {
         case NUD_INCOMPLETE:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE_INCOMPLETE));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE_INCOMPLETE));
             break;
         case NUD_REACHABLE:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE_REACHABLE));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE_REACHABLE));
             break;
         case NUD_STALE:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE_STALE));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE_STALE));
             break;
         case NUD_DELAY:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE_DELAY));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE_DELAY));
             break;
         case NUD_PROBE:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
-                    strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE_PROBE));
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
+                    g_strdup_printf ("%d", INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE_PROBE));
             break;
         case NUD_FAILED:
         case NUD_NOARP:
         case NUD_PERMANENT:
         default:
-            APTERYX_LEAF (root, strdup (INTERFACES_STATE_IPV6_NEIGHBOR_STATE),
+            APTERYX_LEAF (root, strdup (INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_STATE),
                         g_strdup_printf ("%d", rtnl_neigh_get_state (rn)));
         }
     }
@@ -188,8 +189,8 @@ nl_neighbor_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj
         path = g_strdup_printf (INTERFACES_STATE_PATH"/%s/%s/%s",
                         ifname,
                         rtnl_neigh_get_family (rn) == AF_INET ?
-                                INTERFACES_STATE_IPV4_NEIGHBOR :
-                                INTERFACES_STATE_IPV6_NEIGHBOR,
+                                INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_PATH :
+                                INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_PATH,
                         dst);
 
         apteryx_prune (path);
@@ -214,8 +215,8 @@ neighbor_cache_init (void)
     DEBUG ("NEIGHBOR-CACHE: Initialising\n");
 
     /* Start with an empty cache */
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV4_NEIGHBOR);
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV6_NEIGHBOR);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_PATH);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_PATH);
 
     /* Configure Netlink */
     netlink_register ("route/neigh", nl_neighbor_cb);
@@ -245,8 +246,8 @@ neighbor_cache_exit ()
     netlink_unregister ("route/neigh", nl_neighbor_cb);
 
     /* Clear out the cache */
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV4_NEIGHBOR);
-    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_IPV6_NEIGHBOR);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV4_NEIGHBOR_PATH);
+    apteryx_prune (INTERFACES_STATE_PATH"/*/"INTERFACES_STATE_INTERFACE_IPV6_NEIGHBOR_PATH);
 }
 
 MODULE_CREATE ("neighbor-cache", neighbor_cache_init, NULL, neighbor_cache_exit);
