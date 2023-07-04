@@ -1,0 +1,117 @@
+module at-interface {
+  yang-version 1.1;
+  namespace "http://alliedtelesis.com/ns/yang/at-interface";
+  prefix at-interface;
+
+  organization
+    "Allied Telesis Labs New Zealand";
+
+  contact
+    "Allied Telesis Customer Support Group";
+
+  description "This document defines a YANG module for
+    Allied Telesis Interfaces";
+
+  revision 2020-04-15 {
+    description "Initial revision.";
+    reference
+      "RFC 6020: A Data Modeling Language for the
+            Network Configuration Protocol (NETCONF)
+
+       RFC 7950: The YANG 1.1 Data Modeling Language";
+  }
+
+  container interface {
+    list interfaces {
+      key "name";
+      description "Interface List";
+      leaf name {
+        description "Interface name";
+        type string;
+      }
+      leaf if-index {
+        description "Interface Index";
+        type string;
+      }
+      container settings {
+        description "Interface Settings";
+        leaf admin-status {
+          description "Configured admin status of the port. Refer to status/admin-status for applied value";
+          default "admin-up";
+          type enumeration {
+            enum admin-down {
+              value 0;
+            }
+            enum admin-up {
+              value 1;
+            }
+          }
+        }
+        container ipv4 {
+          description "IPv4";
+          list addresses {
+            key "ip";
+            description "IPv4 addresses (ip_subnet)";
+            leaf ip {
+              description "IPv4 Address";
+              type string;
+            }
+            leaf mask {
+              description "Subnet Mask (0-32)";
+              type string;
+            }
+            leaf secondary {
+              description "Secondary IPv4 Address";
+              default "false";
+              type enumeration {
+                enum true;
+                enum false;
+              }
+            }
+          }
+          leaf dhcp-client {
+            description "DHCP client configuration";
+            default "disabled";
+            type enumeration {
+              enum disabled {
+                value 0;
+                description "DHCP client disabled";
+              }
+              enum enabled {
+                value 1;
+                description "DHCP client enabled";
+              }
+            }
+          }
+        }
+      }
+      container status {
+        description "Interface status";
+        config false;
+        leaf oper-status {
+          description "Operation State, refer: kernel documentation";
+          type string;
+        }
+        leaf mtu {
+          description "Maximum Transmission Unit (68-16535 octets)";
+          type string;
+        }
+        container ipv4 {
+          description "IPv4";
+          list addresses {
+            key "ip";
+            description "IPv4 addresses (ip_subnet)";
+            leaf ip {
+              description "IPv4 Address";
+              type string;
+            }
+            leaf mask {
+              description "Subnet Mask (0-32)";
+              type string;
+            }
+          }
+        }
+      }
+    }
+  }
+}

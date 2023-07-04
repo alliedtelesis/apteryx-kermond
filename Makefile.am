@@ -21,36 +21,23 @@ apteryx_kermond_SOURCES = \
 	src/apteryx.c \
 	src/netlink.c \
 	src/procfs.c \
-	src/interface/ifstatus.c \
-	src/interface/ifconfig.c \
-	src/iprouting/rib.c \
-	src/iprouting/fib.c \
-	src/neighbor/settings.c \
-	src/icmp/icmp.c \
-	src/tcp/tcp.c \
-	src/entity/entity.c \
-	src/ip/address-cache.c \
-	src/ip/address-static.c \
-	src/ip/neighbor-cache.c \
-	src/ip/neighbor-static.c
+	src/mod_bonding.c \
+	src/mod_bridges.c \
+	src/mod_interface.c \
+	src/mod_route.c \
+	src/mod_entity.c
 
 BUILT_SOURCES = \
-	models/interface.h \
-	models/interface.xml \
-	models/iprouting.h \
-	models/iprouting.xml \
-	models/ip-neighbor.h \
-	models/ip-neighbor.xml \
-	models/ip-icmp.h \
-	models/ip-icmp.xml \
-	models/ip-tcp.h \
-	models/ip-tcp.xml \
-	models/entity.h \
-	models/entity.xml \
-	models/ietf-interfaces.h \
-	models/ietf-interfaces.xml \
-	models/ietf-ip.h \
-	models/ietf-ip.xml
+	models/at-bonding.h \
+	models/at-bonding.xml \
+	models/at-bridges.h \
+	models/at-bridges.xml \
+	models/at-interface.h \
+	models/at-interface.xml \
+	models/at-route.h \
+	models/at-route.xml \
+	models/at-entity.h \
+	models/at-entity.xml
 
 CLEANFILES = $BUILT_SOURCES
 

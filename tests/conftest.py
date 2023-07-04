@@ -2,6 +2,7 @@ import os
 import pytest
 import subprocess
 import time
+from collections import OrderedDict
 
 
 # TEST CONFIGURATION
@@ -63,8 +64,30 @@ def apteryx_prune(path):
     assert subprocess.check_output("%s -r %s%s" % (APTERYX, APTERYX_URL, path), shell=True).strip().decode('utf-8') != "Failed"
 
 
+def apteryx_search(path):
+    return subprocess.check_output("%s -f %s%s" % (APTERYX, APTERYX_URL, path), shell=True).strip().decode('utf-8')
+
+
 def apteryx_traverse(path):
     return subprocess.check_output("%s -t %s%s" % (APTERYX, APTERYX_URL, path), shell=True).strip().decode('utf-8')
+
+
+def apteryx_get_tree(path):
+    def attach(branch, trunk):
+        parts = branch.split('/', 1)
+        if len(parts) == 1:
+            node, value = parts[0].split()
+            trunk[node] = value
+        else:
+            node, others = parts
+            if node not in trunk:
+                trunk[node] = {}
+            attach(others, trunk[node])
+    output = subprocess.check_output("%s -t %s%s" % (APTERYX, APTERYX_URL, path), shell=True).strip().decode('utf-8')
+    tree = {}
+    for line in output.split('\n'):
+        attach(line[1:], tree)
+    return tree
 
 
 @pytest.fixture(autouse=True)

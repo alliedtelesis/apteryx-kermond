@@ -1,12 +1,18 @@
 #!/bin/bash
+# TEST_WRAPPER="gdb -ex run --args"
+# TEST_WRAPPER="valgrind --leak-check=full"
+# TEST_WRAPPER="valgrind --tool=cachegrind"
 ROOT=`pwd`
 ACTION=$1
 
-# Check required libraries and tools
-if ! pkg-config --exists glib-2.0 libxml-2.0 cunit; then
-        echo "Please install glib-2.0, libxml-2.0, and cunit"
-        echo "(sudo apt-get install build-essential libglib2.0-dev libxml2-dev libcunit1-dev)"
-        exit 1
+if [ ! -f /.dockerenv ]; then
+        if [[ "$(docker images -q apteryx-kermond 2> /dev/null)" == "" ]]; then
+                docker build -t apteryx-kermond .
+                rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+        fi
+        docker rm apteryx-kermond
+        docker run --privileged -it --user manager -v $ROOT/..:/home --env-file <(env | grep TEST_) --name apteryx-kermond apteryx-kermond ./run.sh $ACTION
+        exit 0
 fi
 
 # Build needed packages
@@ -25,6 +31,13 @@ function quit {
         rm -f /tmp/apteryx
         exit $RC
 }
+
+# Check required libraries and tools
+if ! pkg-config --exists glib-2.0 libxml-2.0 cunit; then
+        echo "Please install glib-2.0, libxml-2.0, and cunit"
+        echo "(sudo apt-get install build-essential libglib2.0-dev libxml2-dev libcunit1-dev)"
+        exit 1
+fi
 
 # Check Apteryx install
 if [ ! -d apteryx ]; then
@@ -92,9 +105,6 @@ else
 fi
 
 # Start apteryx-kermond in test namespace
-# TEST_WRAPPER="gdb -ex run --args"
-# TEST_WRAPPER="valgrind --leak-check=full"
-# TEST_WRAPPER="valgrind --tool=cachegrind"
 G_SLICE=always-malloc LD_LIBRARY_PATH=$BUILD/usr/lib \
         $TEST_WRAPPER ../apteryx-kermond $PARAM -p apteryx-kermond.pid
 rc=$?; if [[ $rc != 0 ]]; then quit $rc; fi
@@ -102,7 +112,8 @@ sleep 0.5
 cd $BUILD/../
 
 if [ "$ACTION" == "test" ]; then
-        python3 -m pytest -v
+        sleep 1
+        python3 -m pytest -vv
         killall apteryx-kermond &> /dev/null
         kill `pidof valgrind.bin` &> /dev/null
         sleep 1

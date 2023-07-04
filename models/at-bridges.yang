@@ -1,0 +1,52 @@
+module at-bridges {
+  yang-version 1.1;
+  namespace "http://alliedtelesis.com/ns/yang/at-bridges";
+  prefix at-bridges;
+
+  organization
+    "Allied Telesis Labs New Zealand";
+
+  contact
+    "Allied Telesis Customer Support Group";
+
+  description "This document defines a YANG module for
+    Allied Telesis Bridges";
+
+  revision 2020-05-28 {
+    description "Initial revision.";
+    reference
+      "RFC 6020: A Data Modeling Language for the
+            Network Configuration Protocol (NETCONF)
+
+       RFC 7950: The YANG 1.1 Data Modeling Language";
+  }
+
+  list bridges {
+    key "name";
+    leaf name {
+      description "Bridge Name";
+      type string;
+    }
+    list ports {
+      key "name";
+      leaf name {
+        description "Port name";
+        type string;
+      }
+      leaf vid {
+        description "VLAN Membership (1..4094|1..4094-1..4094)";
+        default "1";
+        type string {
+          pattern '(([1-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-4])|([1-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-4])-([1-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-4]))';
+        }
+      }
+      leaf pvid {
+        description "Native VLAN (1..4094)";
+        default "1";
+        type string {
+          pattern "([1-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-4])";
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,162 @@
+module at-bonding {
+  yang-version 1.1;
+  namespace "http://alliedtelesis.com/ns/yang/at-bonding";
+  prefix at-bonding;
+
+  organization
+    "Allied Telesis Labs New Zealand";
+
+  contact
+    "Allied Telesis Customer Support Group";
+
+  description "This document defines a YANG module for
+    Allied Telesis Bonding";
+
+  revision 2020-11-25 {
+    description "Initial revision.";
+    reference
+      "RFC 6020: A Data Modeling Language for the
+            Network Configuration Protocol (NETCONF)
+
+       RFC 7950: The YANG 1.1 Data Modeling Language";
+  }
+
+  container bonding {
+    list bonds {
+      key "name";
+      description "Interface bonding instances";
+      leaf name {
+        description "Bond Name";
+        type string {
+          pattern "bond([1-9]|1[0-6])";
+        }
+      }
+      container settings {
+        leaf type {
+          description "Bonding Type";
+          default "static";
+          type enumeration {
+            enum lacp {
+              description "Bond the members into an Active LACP group";
+            }
+            enum static {
+              description "Bond the members into a round-robin group";
+            }
+          }
+        }
+        list members {
+          key "name";
+          description "Members of this bond group";
+          leaf name {
+            description "Port name";
+            type string {
+              pattern "eth([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])";
+            }
+          }
+        }
+      }
+      container status {
+        description "Bond status";
+        leaf hash-policy {
+          description "Transmit hash policy for member selection";
+          config false;
+          type enumeration {
+            enum layer2 {
+              value 0;
+              description "layer2 hash policy. XOR of hardware MAC addresses and packet type ID field.";
+            }
+            enum layer2+3 {
+              value 1;
+              description "layer2+3 hash policy. XOR of hardware MAC addresses and IP addresses.";
+            }
+            enum layer3+4 {
+              value 2;
+              description "layer3+4 hash policy. Uses upper layer protocol information, when available.";
+            }
+            enum encap2+3 {
+              value 3;
+              description "encap2+3 hash policy. Same as layer2+3 but relies on skb_flow_dissect, may use inner headers if encapsulation protocol used.";
+            }
+            enum encap3+4 {
+              value 4;
+              description "encap3+4 hash policy. Same as layer3+4 but relies on skb_flow_dissect, may use inner headers if encapsulation protocol used.";
+            }
+          }
+        }
+        leaf mii-status {
+          description "Bond status";
+          config false;
+          type enumeration {
+            enum down {
+              value 0;
+              description "Link down";
+            }
+            enum up {
+              value 1;
+              description "Link up";
+            }
+          }
+        }
+        leaf system-mac {
+          description "System MAC address";
+          config false;
+          type string;
+        }
+        leaf actor-key {
+          description "Actor Key";
+          config false;
+          type string;
+        }
+        leaf partner-key {
+          description "Partner Key";
+          config false;
+          type string;
+        }
+        leaf partner-mac {
+          description "Partner MAC Address";
+          config false;
+          type string;
+        }
+        list members {
+          key "name";
+          description "Members of this bond group";
+          config false;
+          leaf name {
+            description "Member name";
+            config false;
+            type string {
+              pattern "eth([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])";
+            }
+          }
+          leaf mii-status {
+            description "Link status";
+            config false;
+            type enumeration {
+              enum down {
+                value 0;
+                description "Link down";
+              }
+              enum up {
+                value 1;
+                description "Link up";
+              }
+              enum going-down {
+                value 2;
+                description "Going down";
+              }
+              enum going-back {
+                value 3;
+                description "Going back";
+              }
+            }
+          }
+          leaf link-partner-mac {
+            description "Link Partner MAC Address";
+            config false;
+            type string;
+          }
+        }
+      }
+    }
+  }
+}
