@@ -12,37 +12,28 @@ RUN apt-get update -y
 
 ENV TZ=Pacific/Auckland
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
 RUN apt-get install -y \
-    build-essential
+    build-essential \
+    git \
+    valgrind \
+    gdb \
+    sudo
 RUN apt-get install -y \
     libglib2.0-dev \
     libxml2-dev \
-    libcunit1-dev
-RUN apt-get install -y \
+    libcunit1-dev \
     liblua5.2-dev \
-    python3-pytest \
-    git
-RUN apt-get install -y \
     libnl-3-dev \
-    libnl-route-3-dev
-RUN apt-get install -y \
+    libnl-route-3-dev \
     libjansson-dev
 RUN apt-get install -y \
-    flake8
-RUN apt-get install -y \
-    lcov
-RUN apt-get install -y \
+    pip \
+    python3-pytest \
+    flake8 \
+    lcov \
     iproute2
-RUN apt-get install -y \
-    valgrind \
-    gdb
-RUN apt-get install -y \
-    pip
 RUN pip install pyang
 RUN pip install netifaces
-RUN apt-get install -y \
-    sudo
 
 ARG USER=manager
 ARG UID=1000
