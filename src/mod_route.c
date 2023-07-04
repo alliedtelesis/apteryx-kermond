@@ -20,7 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/route.h>
 #include <netlink/route/link.h>
-#include "iprouting.h"
+#include "at-route.h"
 
 /* Fallback if we have no link cache */
 extern unsigned int if_nametoindex (const char *ifname);
@@ -111,34 +111,6 @@ nl_route_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
         apteryx_set_string (ROUTING_IPV6_FIB, route, data);
 
     free (route);
-}
-
-static bool
-fib_init (void)
-{
-    DEBUG ("FIB: Initialising\n");
-
-    /* Setup Apteryx */
-    apteryx_prune (ROUTING_IPV4_FIB);
-    apteryx_prune (ROUTING_IPV6_FIB);
-
-    /* Setup Netlink */
-    netlink_register ("route/route", nl_route_cb);
-
-    return true;
-}
-
-static void
-fib_exit ()
-{
-    DEBUG ("FIB: Exiting\n");
-
-    /* Remove Netlink configuration */
-    netlink_unregister ("route/route", nl_route_cb);
-
-    /* Remove FIB from Apteryx */
-    apteryx_prune (ROUTING_IPV4_FIB);
-    apteryx_prune (ROUTING_IPV6_FIB);
 }
 
 static bool
@@ -514,11 +486,11 @@ exit_cb (gpointer key, gpointer value, gpointer user_data)
 }
 
 static bool
-rib_init (void)
+route_init (void)
 {
     int err;
 
-    DEBUG ("RIB: Initialising\n");
+    DEBUG ("ROUTE: Initialising\n");
 
     /* Local lookup cache */
     v4_static_routes = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -535,12 +507,21 @@ rib_init (void)
     /* Get a handle to the link cache for interface to ifindex conversion */
     link_cache = nl_cache_mngt_require_safe ("route/link");
 
+    /* Setup Apteryx */
+    apteryx_prune (ROUTING_IPV4_FIB);
+    apteryx_prune (ROUTING_IPV6_FIB);
+
+    /* Setup Netlink */
+    netlink_register ("route/route", nl_route_cb);
+
     return true;
 }
 
 static bool
-rib_start ()
+route_start ()
 {
+    DEBUG ("ROUTE: Starting\n");
+
     /* Setup Apteryx watchers */
     apteryx_watch (ROUTING_IPV4_RIB_PATH "/*", watch_static_routes);
     apteryx_watch (ROUTING_IPV6_RIB_PATH "/*", watch_static_routes);
@@ -553,9 +534,9 @@ rib_start ()
 }
 
 static void
-rib_exit ()
+route_exit ()
 {
-    DEBUG ("RIB: Exiting\n");
+    DEBUG ("ROUTE: Exiting\n");
 
     /* Remove Apteryx watchers */
     apteryx_unwatch (ROUTING_IPV4_RIB_PATH "/*", watch_static_routes);
@@ -567,6 +548,9 @@ rib_exit ()
     g_hash_table_foreach (v6_static_routes, exit_cb, GINT_TO_POINTER (6));
     g_hash_table_destroy (v6_static_routes);
 
+    /* Remove Netlink configuration */
+    netlink_unregister ("route/route", nl_route_cb);
+
     /* Remove Netlink socket */
     if (sock)
         nl_close (sock);
@@ -574,6 +558,10 @@ rib_exit ()
     /* Detach from the link cache */
     if (link_cache)
         nl_cache_put (link_cache);
+
+    /* Remove FIB from Apteryx */
+    apteryx_prune (ROUTING_IPV4_FIB);
+    apteryx_prune (ROUTING_IPV6_FIB);
 }
 
-MODULE_CREATE ("rib", rib_init, rib_start, rib_exit);
+MODULE_CREATE ("route", route_init, route_start, route_exit);

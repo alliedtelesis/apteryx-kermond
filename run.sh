@@ -105,7 +105,7 @@ else
 fi
 
 # Start apteryx-kermond in test namespace
-G_SLICE=always-malloc LD_LIBRARY_PATH=$BUILD/usr/lib \
+sudo G_SLICE=always-malloc LD_LIBRARY_PATH=$BUILD/usr/lib \
         $TEST_WRAPPER ../apteryx-kermond $PARAM -p apteryx-kermond.pid
 rc=$?; if [[ $rc != 0 ]]; then quit $rc; fi
 sleep 0.5
@@ -121,8 +121,8 @@ fi
 
 # Gcov
 mkdir -p .gcov
-find . -path ./.gcov -prune -o -name '*.gcno' -exec mv {} .gcov/ \;
-find . -path ./.gcov -prune -o -name '*.gcda' -exec mv {} .gcov/ \;
+find . -path ./.gcov -prune -o -name '*.gcno' -exec mv -f {} .gcov/ \;
+find . -path ./.gcov -prune -o -name '*.gcda' -exec mv -f {} .gcov/ \;
 lcov -q --capture --directory . --output-file .gcov/coverage.info &> /dev/null
 genhtml -q .gcov/coverage.info --output-directory .gcov/
 

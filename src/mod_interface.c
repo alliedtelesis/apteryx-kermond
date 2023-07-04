@@ -180,7 +180,7 @@ link_to_apteryx (struct rtnl_link *link)
  * @param new_obj v1/v2 callbacks
  */
 static void
-nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
+nl_ifstatus_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
 {
     struct rtnl_link *link;
     char *path;
@@ -267,7 +267,7 @@ ifstatus_cleanup (void)
  * @return true if we expected this callback, false otherwise
  */
 static bool
-apteryx_if_cb (const char *path, const char *value)
+apteryx_ifconfig_cb (const char *path, const char *value)
 {
     struct rtnl_link *link = NULL;
     struct rtnl_link *change;
@@ -352,7 +352,7 @@ apteryx_if_cb (const char *path, const char *value)
  * @param new_obj v1/v2 callbacks
  */
 static void
-nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
+nl_ifconfig_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
 {
     struct rtnl_link *link = (struct rtnl_link *) new_obj;
     char *path;
@@ -370,7 +370,7 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
     /* Load all configuration for this interface */
     path = g_strdup_printf (INTERFACE_INTERFACES_PATH "/%s/"
                             INTERFACE_INTERFACES_SETTINGS_PATH, rtnl_link_get_name (link));
-    apteryx_rewatch_tree (path, apteryx_if_cb);
+    apteryx_rewatch_tree (path, apteryx_ifconfig_cb);
     free (path);
 }
 
@@ -379,18 +379,19 @@ nl_if_cb (int action, struct nl_object *old_obj, struct nl_object *new_obj)
  * @return true on success, false otherwise
  */
 static bool
-ifconfig_init (void)
+interface_init (void)
 {
     int err;
 
-    DEBUG ("IFCONFIG: Initialising\n");
+    DEBUG ("INTERFACE: Initialising\n");
 
     /* Create the link cache and register for callbacks */
-    netlink_register ("route/link", nl_if_cb);
+    netlink_register ("route/link", nl_ifconfig_cb);
+    netlink_register ("route/link", nl_ifstatus_cb);
     link_cache = nl_cache_mngt_require_safe ("route/link");
     if (!link_cache)
     {
-        FATAL ("IFCONFIG: Failed to connect to link cache\n");
+        FATAL ("INTERFACE: Failed to connect to link cache\n");
         return false;
     }
 
@@ -398,7 +399,7 @@ ifconfig_init (void)
     sock = nl_socket_alloc ();
     if ((err = nl_connect (sock, NETLINK_ROUTE)) < 0)
     {
-        FATAL ("IFCONFIG: Unable to connect socket: %s\n", nl_geterror (err));
+        FATAL ("INTERFACE: Unable to connect socket: %s\n", nl_geterror (err));
         return false;
     }
 
@@ -410,13 +411,13 @@ ifconfig_init (void)
  * @return true on success, false otherwise
  */
 static bool
-ifconfig_start ()
+interface_start ()
 {
-    DEBUG ("IFCONFIG: Starting\n");
+    DEBUG ("INTERFACE: Starting\n");
 
     /* Setup Apteryx watchers */
     apteryx_watch (INTERFACE_INTERFACES_PATH "/*/"
-                   INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_if_cb);
+                   INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_ifconfig_cb);
 
     /* Load existing configuration */
     GList *iflist = apteryx_search (INTERFACE_INTERFACES_PATH "/");
@@ -424,7 +425,7 @@ ifconfig_start ()
     {
         char *path = g_strdup_printf ("%s/" INTERFACE_INTERFACES_SETTINGS_PATH,
                                       (char *) iter->data);
-        apteryx_rewatch_tree (path, apteryx_if_cb);
+        apteryx_rewatch_tree (path, apteryx_ifconfig_cb);
         free (path);
     }
     g_list_free_full (iflist, free);
@@ -436,20 +437,24 @@ ifconfig_start ()
  * Module shutdown
  */
 static void
-ifconfig_exit ()
+interface_exit ()
 {
-    DEBUG ("IFCONFIG: Exiting\n");
+    DEBUG ("INTERFACE: Exiting\n");
 
     /* Detach Apteryx watchers */
     apteryx_unwatch (INTERFACE_INTERFACES_PATH "/*/"
-                     INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_if_cb);
+                     INTERFACE_INTERFACES_SETTINGS_PATH "/*", apteryx_ifconfig_cb);
 
     /* Detach our callback and unref the link cache */
     if (sock)
         nl_close (sock);
     if (link_cache)
         nl_cache_put (link_cache);
-    netlink_unregister ("route/link", nl_if_cb);
+    netlink_unregister ("route/link", nl_ifconfig_cb);
+    netlink_unregister ("route/link", nl_ifstatus_cb);
+
+    /* Cleanup any status information we created */
+    ifstatus_cleanup ();
 }
 
-MODULE_CREATE ("ifconfig", ifconfig_init, ifconfig_start, ifconfig_exit);
+MODULE_CREATE ("interface", interface_init, interface_start, interface_exit);

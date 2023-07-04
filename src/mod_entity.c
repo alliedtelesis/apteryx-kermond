@@ -20,7 +20,7 @@
 #include "kermond.h"
 #include <netlink/route/addr.h>
 #include <netlink/route/link.h>
-#include "entity.h"
+#include "at-entity.h"
 
 typedef enum
 {
